@@ -106,7 +106,9 @@ export class Match {
       if (owner === -1) continue;
       // Offset the paddle slightly ahead of the finger so it stays visible.
       const offset = owner === 0 ? -paddleR * 0.35 : paddleR * 0.35;
-      this.sim.targets[owner] = { x: Math.max(0, Math.min(W, t.x)), y: t.y + offset };
+      // Mirror boss: your left and right are swapped.
+      const x = owner === 0 && this.sim.table.flags.mirror && !this.twoPlayer ? W - t.x : t.x;
+      this.sim.targets[owner] = { x: Math.max(0, Math.min(W, x)), y: t.y + offset };
     }
     for (const id of [...this.owners.keys()]) if (!active.has(id)) this.owners.delete(id);
   }
@@ -117,7 +119,11 @@ export class Match {
     if (this.phase === 'paused' || this.phase === 'over') return;
     this.elapsed += dt;
 
-    if (this.cpu) sim.targets[1] = this.cpu.update(sim, dt);
+    if (this.cpu) {
+      // Enrage boss: faster and sharper whenever you're ahead.
+      this.cpu.boost = sim.table.flags.enrage && this.score[0] > this.score[1] ? 1.35 : 1;
+      sim.targets[1] = this.cpu.update(sim, dt);
+    }
 
     if (this.phase === 'countdown') {
       const before = this.phaseT === 0 ? -1 : Math.floor(this.phaseT);

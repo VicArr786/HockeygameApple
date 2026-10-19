@@ -27,6 +27,7 @@ export class CpuPlayer {
   private untilReplan = 0;
   private stalled = 0; // seconds the puck has been slow in our half
   private target: Vec | null = null; // shot target for the current attack
+  boost = 1; // >1 makes it faster and quicker to react (the enrage rule)
 
   constructor(params: CpuParams, private rand: () => number = Math.random) {
     this.p = params;
@@ -56,7 +57,7 @@ export class CpuPlayer {
       // Stuck puck: re-plan every frame so jabs and retreats are crisp.
       this.plan = this.unstick(sim);
     } else if (this.untilReplan <= 0) {
-      this.untilReplan = this.p.reaction;
+      this.untilReplan = this.p.reaction / this.boost;
       this.plan = this.choose(sim);
       this.plan.x += (this.rand() - 0.5) * this.p.error * W;
     }
@@ -65,7 +66,7 @@ export class CpuPlayer {
     const dx = this.plan.x - me.x;
     const dy = this.plan.y - me.y;
     const d = Math.hypot(dx, dy);
-    const max = this.p.speed * W * dt;
+    const max = this.p.speed * this.boost * W * dt;
     if (d <= max || d === 0) return { ...this.plan };
     return { x: me.x + (dx / d) * max, y: me.y + (dy / d) * max };
   }
@@ -76,10 +77,12 @@ export class CpuPlayer {
     const { W, H } = t;
     const defendY = H * 0.11 + me.r * 0.5;
     const speed = Math.hypot(puck.vx, puck.vy);
+    // Our goal's centre; it moves on the shifting-goal stage.
+    const gc = sim.goalX[1];
 
     if (!sim.puckInPlay) {
       this.target = null;
-      return { x: W / 2, y: defendY };
+      return { x: gc, y: defendY };
     }
 
     const inMyHalf = puck.y < H / 2 + t.puckR;
@@ -93,9 +96,9 @@ export class CpuPlayer {
     if (puck.vy < 0) {
       const time = (defendY - puck.y) / puck.vy;
       const x = reflect(puck.x + puck.vx * time, t.puckR, W - t.puckR);
-      return { x: W / 2 + (x - W / 2) * 0.85, y: defendY };
+      return { x: gc + (x - gc) * 0.85, y: defendY };
     }
-    return { x: W / 2 + (puck.x - W / 2) * 0.5, y: defendY };
+    return { x: gc + (puck.x - gc) * 0.5, y: defendY };
   }
 
   // Where to put the paddle to hit the puck toward a target.

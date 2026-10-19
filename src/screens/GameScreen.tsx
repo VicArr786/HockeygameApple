@@ -21,6 +21,7 @@ import { MODS, TOWER_START, rewardInfo, stageLabel, titleCase, type CareerResult
 import type { CpuParams } from '../game/ai';
 import { LIVES, WAVE, endlessRules } from '../endless';
 import { COUNTDOWN, Match } from '../game/match';
+import { BARRIER_Y, barrierThickness, windDir } from '../game/physics';
 import { paddleSkin, tableSkin } from '../skins';
 import { colors, fonts, glow, plateShadow } from '../theme';
 import type { GameMode } from './MenuScreen';
@@ -166,7 +167,8 @@ function Board(props: Props & { layout: Layout }) {
     >
       <StatusBar hidden />
       <View style={[styles.table, { left: layout.left, top: layout.top, width: W, height: H, backgroundColor: skin.table }]}>
-        <TableArt W={W} H={H} goalWs={goalWs} skin={skin} p0={p0} />
+        <TableArt W={W} H={H} goalWs={goalWs} skin={skin} p0={p0} topGoalMoves={sim.table.goalSwing > 0} />
+        <Gimmicks g={g} W={W} H={H} skin={skin} />
 
         {g.phase === 'goal' && (
           <View
@@ -189,13 +191,19 @@ function Board(props: Props & { layout: Layout }) {
               <View
                 key={i}
                 pointerEvents="none"
-                style={[styles.circle, { left: p.x - pr, top: p.y - pr, width: pr * 2, height: pr * 2, borderRadius: pr, backgroundColor: colors.puck, opacity: k * 0.25 }]}
+                style={[styles.circle, { left: p.x - pr, top: p.y - pr, width: pr * 2, height: pr * 2, borderRadius: pr, backgroundColor: sim.spin ? colors.p1 : colors.puck, opacity: k * (sim.spin ? 0.45 : 0.25) }]}
               />
             );
           })}
 
         {showPuck && <Puck x={sim.puck.x} y={sim.puck.y} r={sim.puck.r} opacity={puckOpacity} />}
-        <Paddle x={sim.paddles[1].x} y={sim.paddles[1].y} r={sim.paddles[1].r} color={colors.p1} />
+        <Paddle
+          x={sim.paddles[1].x}
+          y={sim.paddles[1].y}
+          r={sim.paddles[1].r}
+          color={colors.p1}
+          opacity={sim.table.flags.phantom ? 0.05 + 0.95 * Math.pow(0.5 + 0.5 * Math.cos(g.elapsed * 2.6), 0.6) : 1}
+        />
         <Paddle x={sim.paddles[0].x} y={sim.paddles[0].y} r={sim.paddles[0].r} color={p0} core={p0Core} />
 
         <Pressable
@@ -373,6 +381,77 @@ function EndlessHud({ g, W, H, p0 }: { g: Match; W: number; H: number; p0: strin
   );
 }
 
+// Everything the boss rules add to the table, drawn under the puck and paddles.
+function Gimmicks({ g, W, H, skin }: { g: Match; W: number; H: number; skin: ReturnType<typeof tableSkin> }) {
+  const { sim } = g;
+  const t = sim.table;
+  // Blackout: dark, with a lightning flash every few seconds.
+  const flash = t.flags.blackout && g.elapsed % 3.4 < 0.14;
+  const barrierH = barrierThickness(t);
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {t.magnet > 0 &&
+        [1, 1.45, 1.9].map((k) => (
+          <View
+            key={k}
+            style={[
+              styles.ring,
+              { left: sim.goalX[0] - t.goalWs[0] * 0.5 * k, top: H - t.goalWs[0] * 0.5 * k, width: t.goalWs[0] * k, height: t.goalWs[0] * k, borderRadius: t.goalWs[0] * 0.5 * k, opacity: 0.32 / k },
+            ]}
+          />
+        ))}
+      {t.wind > 0 && (
+        <Text style={[styles.wind, { top: H * 0.3, width: W, fontSize: W * 0.09 }]}>{windDir(sim) > 0 ? '›››' : '‹‹‹'}</Text>
+      )}
+      {t.wind > 0 && (
+        <Text style={[styles.wind, { top: H * 0.62, width: W, fontSize: W * 0.09 }]}>{windDir(sim) > 0 ? '›››' : '‹‹‹'}</Text>
+      )}
+      {t.bumpers.map((b, i) => (
+        <View
+          key={i}
+          style={[
+            styles.bumper,
+            { left: b.x - b.r, top: b.y - b.r, width: b.r * 2, height: b.r * 2, borderRadius: b.r, borderColor: colors.marquee, boxShadow: glow(colors.marquee, 10, 1) },
+          ]}
+        >
+          <View style={{ width: b.r * 0.7, height: b.r * 0.7, borderRadius: b.r * 0.35, backgroundColor: colors.marquee }} />
+        </View>
+      ))}
+      {t.barrierW > 0 && (
+        <View
+          style={[
+            styles.barrier,
+            { left: sim.barrierX - t.barrierW / 2, top: H * BARRIER_Y - barrierH / 2, width: t.barrierW, height: barrierH, borderRadius: barrierH / 2 },
+          ]}
+        />
+      )}
+      {t.goalSwing > 0 && (
+        <View
+          style={[
+            styles.ring,
+            {
+              left: sim.goalX[1] - t.goalWs[1] * 0.62,
+              top: -t.goalWs[1] * 0.62,
+              width: t.goalWs[1] * 1.24,
+              height: t.goalWs[1] * 1.24,
+              borderRadius: t.goalWs[1] * 0.62,
+              borderWidth: 3,
+              borderColor: colors.p1,
+              opacity: 0.45,
+            },
+          ]}
+        />
+      )}
+      {t.goalSwing > 0 && (
+        <View
+          style={[styles.goalBar, { left: sim.goalX[1] - t.goalWs[1] / 2, width: t.goalWs[1], backgroundColor: colors.p1, boxShadow: glow(colors.p1, 14, 2) }]}
+        />
+      )}
+      {t.flags.blackout && <View style={[StyleSheet.absoluteFill, { backgroundColor: skin.table, opacity: flash ? 0 : 0.88 }]} />}
+    </View>
+  );
+}
+
 function Puck({ x, y, r, opacity }: { x: number; y: number; r: number; opacity: number }) {
   return (
     <View
@@ -387,7 +466,9 @@ function Puck({ x, y, r, opacity }: { x: number; y: number; r: number; opacity: 
   );
 }
 
-function Paddle({ x, y, r, color, core = color }: { x: number; y: number; r: number; color: string; core?: string }) {
+type PaddleProps = { x: number; y: number; r: number; color: string; core?: string; opacity?: number };
+
+function Paddle({ x, y, r, color, core = color, opacity = 1 }: PaddleProps) {
   return (
     <View
       pointerEvents="none"
@@ -403,6 +484,7 @@ function Paddle({ x, y, r, color, core = color }: { x: number; y: number; r: num
           borderColor: color,
           backgroundColor: `${color}33`,
           boxShadow: glow(color, 18, 3),
+          opacity,
         },
       ]}
     >
@@ -554,6 +636,11 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: 'hidden',
   },
+  ring: { position: 'absolute', borderWidth: 2, borderColor: colors.marquee },
+  wind: { position: 'absolute', left: 0, textAlign: 'center', fontFamily: fonts.display, color: colors.text, opacity: 0.3 },
+  bumper: { position: 'absolute', borderWidth: 3, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  barrier: { position: 'absolute', backgroundColor: colors.p1, boxShadow: glow(colors.p1, 12, 1), opacity: 0.85 },
+  goalBar: { position: 'absolute', top: -2, height: 6, borderRadius: 3 },
   waveLabel: { fontFamily: fonts.bold, color: colors.p1, textAlign: 'center', opacity: 0.85 },
   hearts: { position: 'absolute', left: 10, color: colors.p0, letterSpacing: 2 },
   stars: { fontSize: 32, letterSpacing: 4 },

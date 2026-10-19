@@ -32,7 +32,7 @@ ARRASTRA PARA JUGAR
 Tu pala sigue a tu dedo como en la mesa real: golpea fuerte para disparar el disco y usa las bandas para hacer carambolas.
 
 MODO CARRERA: 96 FASES, 12 JEFES
-Abre camino por 12 ligas de rivales de la CPU, cada uno con su estilo. Cada liga termina con un jefe que cambia las reglas: pala gigante, portería fortaleza, disco fantasma que desaparece, hielo negro, disco hiperveloz o ventaja en el marcador. ¿Podrás con OMEGA, el jefe final?
+Abre camino por 12 ligas de rivales de la CPU, cada uno con su estilo. Cada liga termina con un jefe que cambia las reglas: bumpers de pinball, una barrera ante su portería, una portería que se mueve, ventisca que empuja el disco, disco fantasma, tiros con efecto, un imán en tu portería, un apagón con relámpagos y un rey que invierte tus controles. ¿Podrás con OMEGA, el jefe final?
 
 LA TORRE INFINITA
 Termina la carrera y se abre la torre: pisos sin fin, cada uno más difícil, con un jefe guardián cada 10 pisos.
@@ -76,7 +76,7 @@ ARRASTE PARA JOGAR
 Sua raquete segue o seu dedo como na mesa de verdade: bata forte para lançar o disco e use as laterais para tabelar.
 
 CARREIRA: 96 FASES, 12 CHEFÕES
-Enfrente 12 ligas de rivais da CPU, cada um com seu estilo. Toda liga termina com um chefão que muda as regras: raquete gigante, gol fortaleza, disco fantasma que some, gelo negro, disco hiperveloz ou vantagem no placar. Você consegue vencer OMEGA, o chefão final?
+Enfrente 12 ligas de rivais da CPU, cada um com seu estilo. Toda liga termina com um chefão que muda as regras: bumpers de pinball, uma barreira na frente do gol, um gol que se move, nevasca que empurra o disco, disco fantasma, chutes com efeito, um ímã no seu gol, um apagão com relâmpagos e um rei que inverte seus controles. Você consegue vencer OMEGA, o chefão final?
 
 A TORRE INFINITA
 Termine a carreira e a torre se abre: andares sem fim, cada um mais difícil, com um chefão guardião a cada 10 andares.
@@ -120,7 +120,7 @@ ZIEHEN ZUM SPIELEN
 Dein Schläger folgt deinem Finger wie am echten Tisch: hart schlagen, um den Puck abzufeuern, und über die Banden spielen.
 
 KARRIERE: 96 STUFEN, 12 BOSSE
-Kämpf dich durch 12 Ligen voller CPU-Gegner mit eigenem Stil. Jede Liga endet mit einem Boss, der die Regeln bricht: Riesenschläger, Festungstor, Geisterpuck, Glatteis, Hyperpuck oder Vorsprung auf der Anzeigetafel. Schaffst du den Endgegner OMEGA?
+Kämpf dich durch 12 Ligen voller CPU-Gegner mit eigenem Stil. Jede Liga endet mit einem Boss, der die Regeln bricht: Flipper-Bumper, eine Barriere vor dem Tor, ein wanderndes Tor, Schneesturm, Geisterpuck, Effetschüsse, ein Magnet in deinem Tor, Stromausfall mit Blitzen und ein König, der deine Steuerung spiegelt. Schaffst du den Endgegner OMEGA?
 
 DER INFINITY TOWER
 Nach der Karriere öffnet sich der Turm: endlose Etagen, jede schwerer als die letzte, mit einem Wächter-Boss alle 10 Etagen.
@@ -164,7 +164,7 @@ GLISSEZ POUR JOUER
 Votre maillet suit votre doigt comme sur une vraie table : frappez fort pour tirer, jouez les bandes pour surprendre.
 
 CARRIÈRE : 96 NIVEAUX, 12 BOSS
-Traversez 12 ligues d'adversaires de l'IA, chacun avec son style. Chaque ligue se termine par un boss qui change les règles : maillet géant, but forteresse, palet fantôme qui disparaît, verglas, palet hyper-rapide ou avance au score. Saurez-vous battre OMEGA, le boss final ?
+Traversez 12 ligues d'adversaires de l'IA, chacun avec son style. Chaque ligue se termine par un boss qui change les règles : bumpers de flipper, une barrière devant son but, un but qui bouge, un blizzard qui pousse le palet, un palet fantôme, des tirs à effet, un aimant dans votre but, une panne de courant éclairée par la foudre et un roi qui inverse vos commandes. Saurez-vous battre OMEGA, le boss final ?
 
 LA TOUR INFINIE
 Terminez la carrière et la tour s'ouvre : des étages sans fin, toujours plus durs, avec un boss gardien tous les 10 étages.
@@ -208,7 +208,7 @@ L'ESPRIT ARCADE
 マレットは指の動きにぴったり追従。強く弾いてシュート、壁を使ってバンクショットを狙おう。
 
 キャリア：96ステージ・12体のボス
-個性豊かなCPUライバルが待つ12のリーグを勝ち抜こう。各リーグの最後には、ルールを変えるボスが登場。巨大マレット、狭いゴール、消えるゴーストパック、ブラックアイス、超高速パック、最初からリードされた状態など。ラスボスOMEGAを倒せるか？
+個性豊かなCPUライバルが待つ12のリーグを勝ち抜こう。各リーグの最後には、ルールを変えるボスが登場。ピンボールのバンパー、ゴール前を動くバリア、左右に動くゴール、吹雪、消えるパック、カーブするショット、自陣ゴールの磁石、稲妻だけが光る停電、操作を左右反転させる王様など。ラスボスOMEGAを倒せるか？
 
 インフィニティ・タワー
 キャリアをクリアするとタワーが開放。どこまでも続くフロアは上に行くほど難しくなり、10階ごとに守護ボスが待ち受けます。

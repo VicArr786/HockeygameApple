@@ -9,7 +9,11 @@ import type { EndlessLevel, EndlessRules } from './game/match';
 export const LIVES = 3;
 export const WAVE = 5;
 
-const POOL: ModId[] = ['giant', 'fortress', 'wide', 'tiny', 'hyper', 'ice', 'mini', 'ghost'];
+// Mirror is left out: random flipped controls mid-run feel unfair rather than hard.
+const POOL: ModId[] = [
+  'giant', 'fortress', 'wide', 'tiny', 'hyper', 'ice', 'mini', 'ghost',
+  'bumpers', 'barrier', 'moving', 'wind', 'magnet', 'curve', 'enrage', 'phantom', 'blackout',
+];
 
 export function endlessRules(rand: () => number = Math.random): EndlessRules {
   // Waves are rolled once per run, so restarting gives a new run.

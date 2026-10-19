@@ -12,7 +12,27 @@ export const STAGES_PER_LEAGUE = 8;
 // ---------------------------------------------------------------------------
 // Rule modifiers ("twists" on normal stages, stacked on bosses)
 
-export type ModId = 'giant' | 'fortress' | 'wide' | 'tiny' | 'hyper' | 'ice' | 'mini' | 'ghost' | 'down1' | 'down2';
+export type ModId =
+  | 'giant'
+  | 'fortress'
+  | 'wide'
+  | 'tiny'
+  | 'hyper'
+  | 'ice'
+  | 'mini'
+  | 'ghost'
+  | 'down1'
+  | 'down2'
+  | 'bumpers'
+  | 'barrier'
+  | 'moving'
+  | 'wind'
+  | 'magnet'
+  | 'curve'
+  | 'enrage'
+  | 'phantom'
+  | 'mirror'
+  | 'blackout';
 
 export const MODS: Record<ModId, { label: string; desc: string }> = {
   giant: { label: 'Giant paddle', desc: 'Their paddle is huge' },
@@ -25,6 +45,16 @@ export const MODS: Record<ModId, { label: string; desc: string }> = {
   ghost: { label: 'Ghost puck', desc: 'The puck fades in and out' },
   down1: { label: 'Head start', desc: 'They start 1–0 up' },
   down2: { label: 'Head start', desc: 'They start 2–0 up' },
+  bumpers: { label: 'Bumpers', desc: 'Pinball bumpers on the centre line' },
+  barrier: { label: 'Barrier', desc: 'A bar slides across their goal' },
+  moving: { label: 'Shifting goal', desc: 'Their goal slides side to side' },
+  wind: { label: 'Wind', desc: 'Gusts push the puck sideways' },
+  magnet: { label: 'Magnet', desc: 'Your goal pulls the puck in' },
+  curve: { label: 'Curve shots', desc: 'Their hits bend in the air' },
+  enrage: { label: 'Enrage', desc: 'They speed up when you lead' },
+  phantom: { label: 'Phantom', desc: 'Their paddle flickers out of sight' },
+  mirror: { label: 'Mirror', desc: 'Your left and right are swapped' },
+  blackout: { label: 'Blackout', desc: 'The lights go out between flashes' },
 };
 
 export function simMods(mods: ModId[]): SimMods {
@@ -41,6 +71,16 @@ export function simMods(mods: ModId[]): SimMods {
     m.dragScale = 0.05;
     m.bounce = 0.97;
   }
+  m.bumpers = has('bumpers');
+  m.barrier = has('barrier');
+  m.movingGoal = has('moving');
+  m.wind = has('wind');
+  m.magnet = has('magnet');
+  m.curve = has('curve');
+  m.enrage = has('enrage');
+  m.phantom = has('phantom');
+  m.mirror = has('mirror');
+  m.blackout = has('blackout');
   return m;
 }
 
@@ -61,73 +101,73 @@ export const LEAGUES: League[] = [
     name: 'Neon Rookies',
     color: '#9dff3c',
     rivals: ['PIP', 'DOT', 'ZIG', 'FIZZ', 'MOJO', 'NIX', 'BEEP'],
-    boss: { name: 'GATEKEEPER', title: 'Nobody gets in without a fight', style: 'wall', mods: ['giant'] },
+    boss: { name: 'GATEKEEPER', title: 'Guards the gate with pinball bumpers', style: 'wall', mods: ['giant', 'bumpers'] },
   },
   {
     name: 'Backstreet',
     color: '#2bd67b',
     rivals: ['GRIT', 'SLAB', 'RUST', 'DUKE', 'KNOX', 'TANK', 'MACE'],
-    boss: { name: 'BRICKHOUSE', title: 'Built a wall across the goal', style: 'wall', mods: ['fortress'] },
+    boss: { name: 'BRICKHOUSE', title: 'Built a wall across the goal', style: 'wall', mods: ['fortress', 'barrier'] },
   },
   {
     name: 'Chrome Circuit',
     color: '#ff8a1f',
     rivals: ['DRIFT', 'REV', 'NITRO', 'PISTON', 'CLUTCH', 'GEARS', 'TORQUE'],
-    boss: { name: 'TURBO', title: 'Redlines every rally', style: 'speedster', mods: ['hyper'] },
+    boss: { name: 'TURBO', title: 'Hits the redline the moment you lead', style: 'speedster', mods: ['hyper', 'enrage'] },
   },
   {
     name: 'Frost League',
     color: '#5ab8ff',
     rivals: ['FROST', 'SLEET', 'YETI', 'ICICLE', 'BLIZZ', 'HAIL', 'POLAR'],
-    boss: { name: 'GLACIER', title: 'The table is pure ice', style: 'sniper', mods: ['ice'] },
+    boss: { name: 'GLACIER', title: 'Pure ice in a howling blizzard', style: 'sniper', mods: ['ice', 'wind'] },
   },
   {
     name: 'Phantom League',
     color: '#b36bff',
     rivals: ['SHADE', 'WISP', 'HAUNT', 'MIRAGE', 'SPOOK', 'VEIL', 'ECHO'],
-    boss: { name: 'SPECTRE', title: 'Now you see it…', style: 'striker', mods: ['ghost'] },
+    boss: { name: 'SPECTRE', title: 'Now you see them…', style: 'striker', mods: ['ghost', 'phantom'] },
   },
   {
     name: 'Red Zone',
     color: '#ff4f6d',
     rivals: ['BLAZE', 'FURY', 'RUCKUS', 'BRAWL', 'HAVOC', 'RAGE', 'SCAR'],
-    boss: { name: 'WARDEN', title: 'Starts ahead, stays ahead', style: 'wall', mods: ['down2', 'fortress'] },
+    boss: { name: 'WARDEN', title: 'Starts ahead and never stands still', style: 'wall', mods: ['down2', 'fortress', 'moving'] },
   },
   {
     name: 'Storm Division',
     color: '#ff3b4d',
     rivals: ['VOLT', 'ZAP', 'THUNDER', 'GALE', 'CYCLONE', 'SURGE', 'FLASH'],
-    boss: { name: 'TEMPEST', title: 'A tiny puck at lightning speed', style: 'speedster', mods: ['mini', 'hyper'] },
+    boss: { name: 'TEMPEST', title: 'A tiny puck, lightning, and no lights', style: 'speedster', mods: ['mini', 'hyper', 'blackout'] },
   },
   {
     name: 'Synth City',
     color: '#ff2daa',
     rivals: ['NOVA', 'LASER', 'PIXEL', 'RETRO', 'SYNTH', 'NEON', 'VAPOR'],
-    boss: { name: 'HYDRA', title: 'Huge paddle, and your goal is wide open', style: 'striker', mods: ['giant', 'wide'] },
+    boss: { name: 'HYDRA', title: 'Huge paddle, and every shot bends', style: 'striker', mods: ['giant', 'wide', 'curve'] },
   },
   {
     name: 'Gold Coast',
     color: '#ffd23f',
     rivals: ['COIN', 'BULLION', 'JACKPOT', 'BLING', 'KARAT', 'MINT', 'TYCOON'],
-    boss: { name: 'MIDAS', title: 'Shrinks you down to size', style: 'sniper', mods: ['tiny', 'fortress'] },
+    boss: { name: 'MIDAS', title: 'Shrinks you, then pulls the puck home', style: 'sniper', mods: ['tiny', 'fortress', 'magnet'] },
   },
   {
     name: 'Volcano',
     color: '#ff6a00',
     rivals: ['CINDER', 'ASH', 'EMBER', 'SCORCH', 'PYRO', 'CRATER', 'FLARE'],
-    boss: { name: 'MAGMA', title: 'A blazing puck you can barely see', style: 'wild', mods: ['hyper', 'ghost'] },
+    boss: { name: 'MAGMA', title: 'Molten rocks and a puck you can barely see', style: 'wild', mods: ['hyper', 'ghost', 'bumpers'] },
   },
   {
     name: 'Royal Court',
     color: '#e8fbff',
     rivals: ['KNIGHT', 'BISHOP', 'ROOK', 'DUCHESS', 'BARON', 'PRINCE', 'QUEEN'],
-    boss: { name: 'THE KING', title: 'Plays by his own rules', style: 'balanced', mods: ['giant', 'fortress', 'down1'] },
+    boss: { name: 'THE KING', title: 'Plays by his own rules, and flips yours', style: 'balanced', mods: ['giant', 'fortress', 'down1', 'mirror'] },
   },
   {
     name: 'Omega League',
     color: '#ffbf3c',
     rivals: ['RAZOR', 'IRON', 'APEX', 'TITAN', 'ZENITH', 'NEMESIS', 'ORACLE'],
-    boss: { name: 'OMEGA', title: 'The final boss', style: 'striker', mods: ['giant', 'fortress', 'hyper', 'down2'] },
+    boss: { name: 'OMEGA', title: 'The final boss, and it gets angry', style: 'striker', mods: ['giant', 'fortress', 'hyper', 'down2', 'curve', 'enrage'] },
   },
 ];
 
@@ -196,8 +236,11 @@ function rng(seed: number) {
   };
 }
 
-const TWISTS: ModId[] = ['mini', 'hyper', 'giant', 'ghost', 'ice', 'fortress'];
-const TOWER_MODS: ModId[] = ['giant', 'fortress', 'wide', 'tiny', 'hyper', 'ice', 'mini', 'ghost', 'down1'];
+const TWISTS: ModId[] = ['mini', 'bumpers', 'hyper', 'wind', 'giant', 'curve', 'ghost', 'ice', 'fortress'];
+const TOWER_MODS: ModId[] = [
+  'giant', 'fortress', 'wide', 'tiny', 'hyper', 'ice', 'mini', 'ghost', 'down1',
+  'bumpers', 'barrier', 'moving', 'wind', 'magnet', 'curve', 'enrage', 'phantom', 'mirror', 'blackout',
+];
 const SYLLABLES_A = ['KRA', 'ZO', 'VEX', 'NYX', 'OR', 'QUA', 'XE', 'DRA', 'MOR', 'SKY', 'VAL', 'GRY'];
 const SYLLABLES_B = ['TH', 'X', 'ON', 'RA', 'LIS', 'ZAR', 'KOR', 'VEN', 'ROS', 'NUS', 'DOR', 'GAX'];
 

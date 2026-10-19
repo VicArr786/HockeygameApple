@@ -15,7 +15,7 @@
 | Support URL | `https://<your-project>.vercel.app/support` |
 | Support email | tend-us.support@proton.me |
 | Marketing URL | `https://<your-project>.vercel.app/` (optional) |
-| Copyright | 2026 Recluze |
+| Copyright | 2026 Tendus |
 
 ## Promotional text (170)
 
@@ -29,7 +29,7 @@ DRAG TO PLAY
 Your paddle follows your finger exactly like the real thing — flick it hard to fire the puck, angle it to bank shots off the rails.
 
 CAREER: 96 STAGES, 12 BOSSES
-Fight through 12 leagues of CPU rivals, each with their own style: wall-builders, wild swingers, snipers and speed demons. Every league ends in a boss that bends the rules: a giant paddle, a fortress goal, a ghost puck that fades from sight, black ice, a hyper-speed puck, or a head start on the scoreboard. Beat OMEGA, the final boss, if you can.
+Fight through 12 leagues of CPU rivals, each with their own style: wall-builders, wild swingers, snipers and speed demons. Every league ends in a boss that bends the rules: pinball bumpers, a force-field barrier across the goal, a goal that won't stand still, a blizzard that blows the puck sideways, a ghost puck, a paddle that flickers out of sight, curving shots, a magnet in your own goal, a blackout lit only by lightning, and a king who flips your controls. Beat OMEGA, the final boss, if you can.
 
 THE INFINITY TOWER
 Beat the Career and the tower opens: endless floors, each harder than the last, with a guardian boss every 10 floors. How high can you climb?

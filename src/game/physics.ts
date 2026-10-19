@@ -24,7 +24,18 @@ export type Table = {
   maxPaddleSpeed: number;
   drag: number;
   wallRestitution: number;
+  // Boss gimmicks; zero / empty when off.
+  bumpers: Bumper[]; // round pinball bumpers the puck bounces off
+  barrierW: number; // width of the force-field bar sliding in front of the top goal
+  goalSwing: number; // how far the top goal slides from the centre
+  wind: number; // sideways gust acceleration on the puck, px/s²
+  magnet: number; // pull on the puck toward the bottom goal, px/s²
+  curve: number; // spin the top paddle puts on the puck, rad/s
+  // Rules the match and screen act on rather than the physics.
+  flags: { enrage: boolean; phantom: boolean; mirror: boolean; blackout: boolean };
 };
+
+export type Bumper = { x: number; y: number; r: number };
 
 // Rule changes used by Career bosses. Scales are relative to a standard table.
 export type SimMods = {
@@ -34,6 +45,16 @@ export type SimMods = {
   speedScale?: number;
   dragScale?: number;
   bounce?: number; // wall restitution
+  bumpers?: boolean;
+  barrier?: boolean;
+  movingGoal?: boolean;
+  wind?: boolean;
+  magnet?: boolean;
+  curve?: boolean;
+  enrage?: boolean; // top CPU speeds up while it is behind
+  phantom?: boolean; // top paddle flickers invisible
+  mirror?: boolean; // bottom player's left and right are swapped
+  blackout?: boolean; // the table goes dark between lightning flashes
 };
 
 export type Sim = {
@@ -43,6 +64,10 @@ export type Sim = {
   // Where each paddle wants to be this frame (finger or AI position).
   targets: [Vec, Vec];
   puckInPlay: boolean;
+  time: number; // seconds simulated, drives the moving gimmicks
+  goalX: [number, number]; // centre of each goal mouth (0 = bottom)
+  barrierX: number; // centre of the barrier bar
+  spin: number; // current curve on the puck, rad/s
 };
 
 const WALL_RESTITUTION = 0.88;
@@ -68,8 +93,31 @@ export function makeTable(W: number, H: number, mods: SimMods = {}): Table {
     maxPaddleSpeed: W * 7,
     drag: DRAG * (mods.dragScale ?? 1),
     wallRestitution: mods.bounce ?? WALL_RESTITUTION,
+    bumpers: mods.bumpers
+      ? [
+          { x: W * 0.24, y: H / 2, r: W * 0.055 },
+          { x: W * 0.76, y: H / 2, r: W * 0.055 },
+        ]
+      : [],
+    barrierW: mods.barrier ? W * 0.3 : 0,
+    goalSwing: mods.movingGoal ? (W - goalW * gs[1]) / 2 - W * 0.07 : 0,
+    wind: mods.wind ? W * 0.55 : 0,
+    magnet: mods.magnet ? W * 0.35 : 0,
+    curve: mods.curve ? 2.2 : 0,
+    flags: {
+      enrage: !!mods.enrage,
+      phantom: !!mods.phantom,
+      mirror: !!mods.mirror,
+      blackout: !!mods.blackout,
+    },
   };
 }
+
+export const BARRIER_Y = 0.075; // of the table height, in front of the top goal
+export const barrierThickness = (t: Table) => t.puckR * 0.45;
+
+// Gusts blow one way for a few seconds, then the other: -1 left, 1 right.
+export const windDir = (sim: Sim) => (Math.sin((sim.time * Math.PI) / 3.5) >= 0 ? 1 : -1);
 
 export function createSim(W: number, H: number, mods?: SimMods): Sim {
   const table = makeTable(W, H, mods);
@@ -85,6 +133,10 @@ export function createSim(W: number, H: number, mods?: SimMods): Sim {
       { x: W / 2, y: H * 0.15 },
     ],
     puckInPlay: true,
+    time: 0,
+    goalX: [W / 2, W / 2],
+    barrierX: W / 2,
+    spin: 0,
   };
   return sim;
 }
@@ -96,6 +148,7 @@ export function servePuck(sim: Sim, toPlayer: 0 | 1) {
   sim.puck.y = toPlayer === 0 ? H * 0.68 : H * 0.32;
   sim.puck.vx = 0;
   sim.puck.vy = 0;
+  sim.spin = 0;
   sim.puckInPlay = true;
 }
 
@@ -124,6 +177,11 @@ export function step(sim: Sim, dt: number): GameEvent[] {
   const events: GameEvent[] = [];
   const t = sim.table;
   const { puck, paddles } = sim;
+
+  // Moving parts of the table.
+  sim.time += dt;
+  sim.goalX[1] = t.W / 2 + t.goalSwing * Math.sin(sim.time * 0.8);
+  if (t.barrierW) sim.barrierX = t.W / 2 + (t.W / 2 - t.barrierW / 2 - t.puckR) * Math.sin(sim.time * 1.1);
 
   const starts = paddles.map((p) => ({ x: p.x, y: p.y }));
   const ends = ([0, 1] as const).map((i) => clampPaddle(t, i, sim.targets[i]));
@@ -163,11 +221,16 @@ export function step(sim: Sim, dt: number): GameEvent[] {
     puck.y += puck.vy * h;
 
     for (let i = 0; i < 2; i++) {
-      hitStrength = Math.max(hitStrength, collidePaddle(puck, paddles[i]));
+      const hit = collidePaddle(puck, paddles[i]);
+      // A curve-shot boss puts spin on the puck, bending it toward the side it swiped.
+      if (hit > 0 && i === 1 && t.curve) sim.spin = t.curve * (paddles[1].vx >= 0 ? 1 : -1);
+      hitStrength = Math.max(hitStrength, hit);
     }
     clampSpeed(puck, t.maxPuckSpeed);
 
     wallStrength = Math.max(wallStrength, collideWalls(sim));
+    for (const b of t.bumpers) wallStrength = Math.max(wallStrength, collideBumper(puck, b, t.maxPuckSpeed));
+    if (t.barrierW) wallStrength = Math.max(wallStrength, collideBarrier(sim));
 
     // A puck pinned against a wall pushes the paddle back instead of
     // overlapping it.
@@ -196,6 +259,26 @@ export function step(sim: Sim, dt: number): GameEvent[] {
     const k = Math.exp(-t.drag * dt);
     puck.vx *= k;
     puck.vy *= k;
+    if (t.wind) puck.vx += t.wind * windDir(sim) * dt;
+    if (t.magnet) {
+      const dx = sim.goalX[0] - puck.x;
+      const dy = t.H - puck.y;
+      const d = Math.hypot(dx, dy) || 1;
+      puck.vx += (dx / d) * t.magnet * dt;
+      puck.vy += (dy / d) * t.magnet * dt;
+    }
+    if (sim.spin) {
+      // Rotate the velocity: the puck curves while the spin lasts.
+      const a = sim.spin * dt;
+      const c = Math.cos(a);
+      const sn = Math.sin(a);
+      const vx = puck.vx * c - puck.vy * sn;
+      puck.vy = puck.vx * sn + puck.vy * c;
+      puck.vx = vx;
+      sim.spin *= Math.exp(-1.6 * dt);
+      if (Math.abs(sim.spin) < 0.05) sim.spin = 0;
+    }
+    clampSpeed(puck, t.maxPuckSpeed);
   }
 
   if (hitStrength > 0) events.push({ type: 'hit', strength: hitStrength });
@@ -243,9 +326,11 @@ function collideWalls(sim: Sim): number {
   }
 
   // The goal at the end the puck is nearest: top is player 1's, bottom player 0's.
-  const goalW = puck.y < t.H / 2 ? t.goalWs[1] : t.goalWs[0];
-  const gl = t.W / 2 - goalW / 2;
-  const gr = t.W / 2 + goalW / 2;
+  const top = puck.y < t.H / 2;
+  const goalW = top ? t.goalWs[1] : t.goalWs[0];
+  const cx = top ? sim.goalX[1] : sim.goalX[0];
+  const gl = cx - goalW / 2;
+  const gr = cx + goalW / 2;
   // Once past the goal line the puck is inside the goal box.
   if (puck.y < 0 || puck.y > t.H) puck.x = Math.min(gr, Math.max(gl, puck.x));
   const inMouth = puck.x > gl && puck.x < gr;
@@ -280,6 +365,47 @@ function collideWalls(sim: Sim): number {
     }
   }
   return strength;
+}
+
+// A fixed round bumper. Returns impact strength in 0..1.
+function collideBumper(puck: Body, b: Bumper, maxSpeed: number): number {
+  const dx = puck.x - b.x;
+  const dy = puck.y - b.y;
+  const d = Math.hypot(dx, dy);
+  const min = puck.r + b.r;
+  if (d >= min || d < 0.0001) return 0;
+  const nx = dx / d;
+  const ny = dy / d;
+  puck.x = b.x + nx * min;
+  puck.y = b.y + ny * min;
+  const along = puck.vx * nx + puck.vy * ny;
+  if (along >= 0) return 0;
+  // Pinball bumpers kick back a little harder than they were hit.
+  puck.vx -= 2.05 * along * nx;
+  puck.vy -= 2.05 * along * ny;
+  return Math.min(1, -along / maxSpeed);
+}
+
+// The force-field bar in front of the top goal: a capsule the puck bounces off.
+function collideBarrier(sim: Sim): number {
+  const { puck, table: t } = sim;
+  const y = t.H * BARRIER_Y;
+  const half = t.barrierW / 2;
+  const cx = Math.max(sim.barrierX - half, Math.min(sim.barrierX + half, puck.x));
+  const dx = puck.x - cx;
+  const dy = puck.y - y;
+  const d = Math.hypot(dx, dy);
+  const min = puck.r + barrierThickness(t) / 2;
+  if (d >= min) return 0;
+  const nx = d > 0.0001 ? dx / d : 0;
+  const ny = d > 0.0001 ? dy / d : 1;
+  puck.x = cx + nx * min;
+  puck.y = y + ny * min;
+  const along = puck.vx * nx + puck.vy * ny;
+  if (along >= 0) return 0;
+  puck.vx -= 1.9 * along * nx;
+  puck.vy -= 1.9 * along * ny;
+  return Math.min(1, -along / t.maxPuckSpeed);
 }
 
 function checkGoal(sim: Sim): 0 | 1 | null {

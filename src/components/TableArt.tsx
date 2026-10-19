@@ -5,10 +5,11 @@ import type { TableSkin } from '../skins';
 import { colors, glow } from '../theme';
 
 // goalWs: width of the goal each player defends (0 = bottom, 1 = top).
-type Props = { W: number; H: number; goalWs: [number, number]; skin: TableSkin; p0: string };
+// topGoalMoves: the shifting-goal rule is on, so the screen draws that goal itself.
+type Props = { W: number; H: number; goalWs: [number, number]; skin: TableSkin; p0: string; topGoalMoves?: boolean };
 
 // Static table markings. Memoised so the 60fps game loop never re-renders it.
-export const TableArt = memo(function TableArt({ W, H, goalWs, skin, p0 }: Props) {
+export const TableArt = memo(function TableArt({ W, H, goalWs, skin, p0, topGoalMoves }: Props) {
   const spacing = W / 11;
   const holes = [];
   for (let y = spacing / 2; y < H; y += spacing) {
@@ -25,10 +26,10 @@ export const TableArt = memo(function TableArt({ W, H, goalWs, skin, p0 }: Props
       <View style={[styles.line, { top: H / 2 - 1.5, width: W, backgroundColor: skin.line }]} />
       <Ring cx={W / 2} cy={H / 2} r={centreR} color={skin.line} />
       <View style={[styles.dot, { left: W / 2 - 6, top: H / 2 - 6, backgroundColor: skin.line }]} />
-      <Ring cx={W / 2} cy={0} r={topW * 0.62} color={colors.p1} faint />
+      {!topGoalMoves && <Ring cx={W / 2} cy={0} r={topW * 0.62} color={colors.p1} faint />}
       <Ring cx={W / 2} cy={H} r={bottomW * 0.62} color={p0} faint />
       <View style={[styles.border, { width: W, height: H, borderColor: skin.edge, boxShadow: glow(skin.edge, 18, 1) }]} />
-      <View style={[styles.goal, { left: (W - topW) / 2, width: topW, top: -2, backgroundColor: colors.p1, boxShadow: glow(colors.p1, 14, 2) }]} />
+      {!topGoalMoves && <View style={[styles.goal, { left: (W - topW) / 2, width: topW, top: -2, backgroundColor: colors.p1, boxShadow: glow(colors.p1, 14, 2) }]} />}
       <View style={[styles.goal, { left: (W - bottomW) / 2, width: bottomW, top: H - 4, backgroundColor: p0, boxShadow: glow(p0, 14, 2) }]} />
     </View>
   );
