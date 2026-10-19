@@ -5,10 +5,11 @@ Static site for the App Store's required URLs: a landing page plus
 
 ## 1. Fill in your details
 
-Every page has two placeholders. Replace them before deploying, from the repo root:
+The support email (tend-us.support@proton.me) is filled in. The copyright
+line still has a `[YOUR NAME]` placeholder; replace it from the repo root:
 
 ```bash
-sed -i 's/\[YOUR NAME\]/Jane Doe/g; s/\[SUPPORT EMAIL\]/you@example.com/g' website/*.html
+sed -i 's/\[YOUR NAME\]/Jane Doe/g' website/*.html
 ```
 
 Once the app is live, also replace the `href="#"` on the "Coming soon" button in

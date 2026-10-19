@@ -12,13 +12,16 @@ import {
   rank,
   rewardInfo,
   stage as getStage,
+  titleCase,
   totalStars,
   type Reward,
   type Stage,
 } from '../career';
+import { Hazard } from '../components/Hazard';
+import { SevenSeg } from '../components/SevenSeg';
 import { buzz, playSound } from '../feedback';
 import { useSettings } from '../settings';
-import { colors, glow } from '../theme';
+import { colors, fonts, plateShadow } from '../theme';
 
 // Pages: one per league, then the Infinity Tower.
 const TOWER_PAGE = LEAGUES.length;
@@ -39,13 +42,8 @@ export function CareerScreen({ onPlay, onBack }: { onPlay: (stage: number) => vo
   const locked = beaten < pageStart;
 
   // Leagues list all 8 stages; the tower shows a window around your floor.
-  let indices: number[];
-  if (!tower) {
-    indices = Array.from({ length: STAGES_PER_LEAGUE }, (_, i) => pageStart + i);
-  } else {
-    const first = Math.max(TOWER_START, beaten - 3);
-    indices = Array.from({ length: 8 }, (_, i) => first + i);
-  }
+  const first = tower ? Math.max(TOWER_START, beaten - 3) : pageStart;
+  const indices = Array.from({ length: STAGES_PER_LEAGUE }, (_, i) => first + i);
 
   const turn = (d: number) => {
     playSound('tap', 0.5);
@@ -53,52 +51,57 @@ export function CareerScreen({ onPlay, onBack }: { onPlay: (stage: number) => vo
     setPage((p) => Math.max(0, Math.min(TOWER_PAGE, p + d)));
   };
 
+  let status: string;
+  if (locked) status = tower ? 'Beat Omega to open the tower.' : `Beat ${titleCase(LEAGUES[page - 1].boss.name)} to get in.`;
+  else if (tower) status = cleared === 0 ? 'No floors climbed yet.' : `${cleared} ${cleared === 1 ? 'floor' : 'floors'} climbed.`;
+  else status = `${cleared} of ${STAGES_PER_LEAGUE} cleared, ${leagueStars(settings.stars, pageStart)} of ${STAGES_PER_LEAGUE * 3} stars.`;
+
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 28 }]}
     >
       <Pressable accessibilityRole="button" accessibilityLabel="Back to menu" onPress={onBack} hitSlop={10} style={styles.back}>
-        <Text style={styles.backText}>‹ MENU</Text>
+        <Text style={styles.backText}>‹ Menu</Text>
       </Pressable>
 
-      <Text style={styles.title}>CAREER</Text>
-      <View style={styles.statRow}>
-        <Text style={styles.stat}>
-          <Text style={{ color: colors.puck }}>★ {stars}</Text>
-        </Text>
-        <Text style={styles.stat}>{r.name}</Text>
-      </View>
-      <Text style={styles.subtitle}>
-        {r.next !== null ? `${r.next - stars} ★ to the next rank` : 'Top rank reached'}
-        {beaten >= TOWER_START ? ` · Best: floor ${beaten - TOWER_START}` : ` · ${beaten}/${TOWER_START} stages`}
+      <Text accessibilityRole="header" style={styles.title}>
+        Career
       </Text>
 
-      <View style={styles.pager}>
-        <PagerArrow label="‹" disabled={page === 0} onPress={() => turn(-1)} />
-        <View style={styles.pagerMid}>
-          <Text style={styles.pagerKicker}>{tower ? 'ENDLESS' : `LEAGUE ${page + 1} OF ${LEAGUES.length}`}</Text>
-          <Text style={[styles.pagerName, { color, textShadowColor: color }]} numberOfLines={1} adjustsFontSizeToFit>
-            {tower ? 'INFINITY TOWER' : LEAGUES[page].name}
-          </Text>
-          <Text style={styles.pagerSub}>
-            {locked
-              ? tower
-                ? 'Beat OMEGA to open the tower'
-                : `Beat ${LEAGUES[page - 1].boss.name} to enter`
-              : tower
-                ? `${cleared} floors climbed`
-                : `${cleared}/${STAGES_PER_LEAGUE} cleared · ${leagueStars(settings.stars, pageStart)}/${STAGES_PER_LEAGUE * 3} ★`}
+      <View style={styles.scoreboard}>
+        <View style={styles.scoreCell}>
+          <SevenSeg value={String(stars).padStart(3, '0')} height={34} color={colors.marquee} />
+          <Text style={styles.scoreLabel}>stars</Text>
+        </View>
+        <View style={styles.rankCell}>
+          <Text style={styles.rank}>{r.name}</Text>
+          <Text style={styles.scoreLabel}>
+            {r.next !== null ? `${r.next - stars} more for the next rank` : 'Highest rank'}
           </Text>
         </View>
-        <PagerArrow label="›" disabled={page === TOWER_PAGE} onPress={() => turn(1)} />
       </View>
 
-      <View style={styles.list}>
+      <View style={styles.pager}>
+        <PagerArrow dir={-1} disabled={page === 0} onPress={() => turn(-1)} />
+        <View style={styles.pagerMid}>
+          <Text style={styles.pagerSmall}>{tower ? 'After the Career' : `League ${page + 1} of ${LEAGUES.length}`}</Text>
+          <Text style={[styles.pagerName, { color }]} numberOfLines={1} adjustsFontSizeToFit>
+            {tower ? 'Infinity Tower' : LEAGUES[page].name}
+          </Text>
+          <Text style={styles.pagerSmall}>{status}</Text>
+        </View>
+        <PagerArrow dir={1} disabled={page === TOWER_PAGE} onPress={() => turn(1)} />
+      </View>
+
+      <View>
+        {/* The ladder rail behind the stage markers. */}
+        <View style={[styles.rail, { backgroundColor: `${color}55` }]} />
         {indices.map((i) => (
-          <StageCard
+          <StageRow
             key={i}
             stage={getStage(i)}
+            color={color}
             stars={settings.stars[i] ?? 0}
             state={i < beaten ? 'done' : i === beaten ? 'next' : 'locked'}
             onPress={() => {
@@ -116,171 +119,181 @@ export function CareerScreen({ onPlay, onBack }: { onPlay: (stage: number) => vo
 const leagueStars = (stars: number[], start: number) =>
   stars.slice(start, start + STAGES_PER_LEAGUE).reduce((a, b) => a + (b || 0), 0);
 
-function PagerArrow({ label, disabled, onPress }: { label: string; disabled: boolean; onPress: () => void }) {
+function PagerArrow({ dir, disabled, onPress }: { dir: -1 | 1; disabled: boolean; onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label === '‹' ? 'Previous league' : 'Next league'}
+      accessibilityLabel={dir < 0 ? 'Previous league' : 'Next league'}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       hitSlop={8}
-      style={[styles.arrow, disabled && { opacity: 0.25 }]}
+      style={({ pressed }) => [
+        styles.arrow,
+        { boxShadow: plateShadow(pressed ? 1 : 3), transform: [{ translateY: pressed ? 2 : 0 }] },
+        disabled && { opacity: 0.3 },
+      ]}
     >
-      <Text style={styles.arrowText}>{label}</Text>
+      <Text style={styles.arrowText}>{dir < 0 ? '‹' : '›'}</Text>
     </Pressable>
   );
 }
 
-type CardProps = { stage: Stage; stars: number; state: 'done' | 'next' | 'locked'; onPress: () => void };
+type RowProps = { stage: Stage; color: string; stars: number; state: 'done' | 'next' | 'locked'; onPress: () => void };
 
-function StageCard({ stage: s, stars, state, onPress }: CardProps) {
+function StageRow({ stage: s, color, stars, state, onPress }: RowProps) {
   const locked = state === 'locked';
   const next = state === 'next';
   const reward = bossReward(s);
-  const accent = s.boss ? colors.p0 : colors.puck;
   // Bosses are always shown as a teaser; ordinary rivals stay hidden until reached.
   const hidden = locked && !s.boss;
-  const num = s.floor ? String(s.floor) : String((s.index % STAGES_PER_LEAGUE) + 1).padStart(2, '0');
+  const num = s.floor ? s.floor : (s.index % STAGES_PER_LEAGUE) + 1;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${hidden ? 'Locked stage' : s.name}${s.boss ? ', boss' : ''}, ${state === 'done' ? `${stars} stars` : next ? 'next' : 'locked'}`}
+      accessibilityLabel={`${hidden ? 'Locked stage' : titleCase(s.name)}${s.boss ? ', boss' : ''}, ${
+        state === 'done' ? `${stars} of 3 stars` : next ? 'play next' : 'locked'
+      }`}
       accessibilityState={{ disabled: locked }}
       disabled={locked}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        s.boss && styles.bossCard,
-        s.boss && { borderColor: `${colors.p0}${locked ? '55' : 'aa'}` },
-        next && { borderColor: accent, boxShadow: glow(accent, 14, 0), backgroundColor: `${accent}14` },
-        state === 'done' && !s.boss && { borderColor: `${colors.p1}66` },
-        locked && styles.lockedCard,
-        { transform: [{ scale: pressed ? 0.98 : 1 }] },
-      ]}
+      style={({ pressed }) => [styles.row, next && styles.rowNext, pressed && { opacity: 0.85 }]}
     >
-      <Text style={[styles.num, next && { color: accent }, s.floor > 99 && { fontSize: 15 }]}>{num}</Text>
-      <View style={styles.info}>
-        {s.boss && <Text style={styles.bossKicker}>BOSS</Text>}
-        <Text style={[styles.name, s.boss && styles.bossName, locked && { color: colors.dim }]}>{hidden ? '???' : s.name}</Text>
-        <Text style={styles.tagline}>{hidden ? 'Clear the stage above to unlock' : s.tagline}</Text>
+      <View
+        style={[
+          styles.marker,
+          state === 'done' && { backgroundColor: color, borderColor: color },
+          next && { borderColor: colors.marquee, backgroundColor: colors.bg },
+        ]}
+      >
+        <Text style={[styles.markerText, state === 'done' && { color: colors.ink }, next && { color: colors.marquee }]}>
+          {num}
+        </Text>
+      </View>
+
+      <View style={[styles.body, s.boss && styles.bossBody, locked && { opacity: 0.55 }]}>
+        {s.boss && <Hazard width={640} height={10} style={styles.hazard} />}
+        <View style={styles.bodyTop}>
+          <View style={styles.flex}>
+            <Text style={[styles.name, s.boss && styles.bossName]}>{hidden ? '? ? ?' : s.name}</Text>
+            <Text style={styles.tagline}>{hidden ? 'Clear the stage before this one.' : s.tagline}</Text>
+          </View>
+          {state === 'done' && <StarRow n={stars} />}
+          {next && <Text style={styles.play}>Play</Text>}
+        </View>
         {!hidden && s.mods.length > 0 && (
-          <View style={styles.modRow}>
+          <View style={styles.tags}>
             {s.mods.map((m) => (
-              <Text key={m} style={styles.modChip}>
+              <Text key={m} style={styles.tag}>
                 {MODS[m].label}
               </Text>
             ))}
           </View>
         )}
-        {reward && <RewardLine reward={reward} dim={locked} />}
-      </View>
-      <View style={styles.right}>
-        {state === 'done' ? (
-          <Text style={styles.cardStars}>
-            {[0, 1, 2].map((i) => (
-              <Text key={i} style={{ color: i < stars ? colors.puck : 'rgba(143, 136, 184, 0.3)' }}>
-                ★
-              </Text>
-            ))}
-          </Text>
-        ) : (
-          <Text style={[styles.status, next && { color: accent }]}>{next ? 'PLAY ›' : '🔒'}</Text>
-        )}
+        {reward && <RewardLine reward={reward} />}
       </View>
     </Pressable>
   );
 }
 
-function RewardLine({ reward, dim }: { reward: Reward; dim: boolean }) {
+function StarRow({ n }: { n: number }) {
+  return (
+    <Text style={styles.stars}>
+      {[0, 1, 2].map((i) => (
+        <Text key={i} style={{ color: i < n ? colors.marquee : 'rgba(154, 147, 196, 0.3)' }}>
+          ★
+        </Text>
+      ))}
+    </Text>
+  );
+}
+
+function RewardLine({ reward }: { reward: Reward }) {
   const info = rewardInfo(reward);
   return (
     <View style={styles.rewardRow}>
-      <View style={[styles.swatch, { backgroundColor: info.color }, dim && { opacity: 0.4 }]} />
-      <Text style={styles.reward}>Drops: {info.label}</Text>
+      <View style={[styles.swatch, { backgroundColor: info.color }]} />
+      <Text style={styles.reward}>Beat to win the {info.label}</Text>
     </View>
   );
 }
 
+const MARKER = 34;
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  content: { paddingHorizontal: 20, maxWidth: 560, width: '100%', alignSelf: 'center' },
+  content: { paddingHorizontal: 18, maxWidth: 560, width: '100%', alignSelf: 'center' },
   back: { alignSelf: 'flex-start', paddingVertical: 8 },
-  backText: { color: colors.dim, fontSize: 15, fontWeight: '800', letterSpacing: 2 },
-  title: {
-    color: colors.text,
-    fontSize: 40,
-    fontWeight: '900',
-    fontStyle: 'italic',
-    letterSpacing: 4,
-    textAlign: 'center',
-    marginTop: 4,
-    textShadowColor: colors.puck,
-    textShadowRadius: 16,
-    textShadowOffset: { width: 0, height: 0 },
-  },
-  statRow: { flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 6 },
-  stat: { color: colors.text, fontSize: 18, fontWeight: '900', letterSpacing: 2 },
-  subtitle: { color: colors.dim, fontSize: 13, textAlign: 'center', marginTop: 4, marginBottom: 18 },
-  pager: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  pagerMid: { flex: 1, alignItems: 'center', gap: 2 },
-  pagerKicker: { color: colors.dim, fontSize: 11, fontWeight: '800', letterSpacing: 3 },
-  pagerName: {
-    fontSize: 24,
-    fontWeight: '900',
-    fontStyle: 'italic',
-    letterSpacing: 2,
-    textShadowRadius: 12,
-    textShadowOffset: { width: 0, height: 0 },
-  },
-  pagerSub: { color: colors.dim, fontSize: 13 },
-  arrow: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: 'rgba(143, 136, 184, 0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  arrowText: { color: colors.text, fontSize: 26, fontWeight: '900', marginTop: -3 },
-  list: { gap: 12 },
-  card: {
+  backText: { fontFamily: fonts.bold, color: colors.dim, fontSize: 17 },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 40, marginTop: 2 },
+  scoreboard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(143, 136, 184, 0.35)',
-    borderRadius: 16,
+    gap: 18,
+    backgroundColor: colors.plateEdge,
+    borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 16,
+    marginTop: 12,
   },
-  bossCard: { borderWidth: 2, paddingVertical: 18, backgroundColor: 'rgba(255, 45, 170, 0.06)' },
-  lockedCard: { opacity: 0.6 },
-  num: { color: colors.dim, fontSize: 20, fontWeight: '900', fontVariant: ['tabular-nums'], width: 36 },
-  info: { flex: 1, gap: 3 },
-  bossKicker: { color: colors.p0, fontSize: 11, fontWeight: '900', letterSpacing: 4 },
-  name: { color: colors.text, fontSize: 20, fontWeight: '900', letterSpacing: 2 },
-  bossName: { fontSize: 24, fontStyle: 'italic' },
-  tagline: { color: colors.dim, fontSize: 13 },
-  modRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
-  modChip: {
-    color: colors.puck,
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.2,
-    borderWidth: 1,
-    borderColor: `${colors.puck}77`,
-    borderRadius: 7,
-    paddingHorizontal: 6,
+  scoreCell: { gap: 6 },
+  rankCell: { flex: 1, gap: 4 },
+  scoreLabel: { fontFamily: fonts.body, color: colors.dim, fontSize: 14 },
+  rank: { fontFamily: fonts.display, color: colors.text, fontSize: 22 },
+  pager: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 22, marginBottom: 18 },
+  pagerMid: { flex: 1, gap: 2 },
+  pagerSmall: { fontFamily: fonts.body, color: colors.dim, fontSize: 14 },
+  pagerName: { fontFamily: fonts.display, fontSize: 24 },
+  arrow: { width: 42, height: 42, borderRadius: 10, backgroundColor: colors.plate, alignItems: 'center', justifyContent: 'center' },
+  arrowText: { fontFamily: fonts.bold, color: colors.text, fontSize: 28, marginTop: -4 },
+  rail: { position: 'absolute', left: MARKER / 2 - 1, top: MARKER / 2, bottom: MARKER, width: 2 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: 10 },
+  rowNext: {},
+  flex: { flex: 1 },
+  marker: {
+    width: MARKER,
+    height: MARKER,
+    borderRadius: MARKER / 2,
+    borderWidth: 2,
+    borderColor: 'rgba(154, 147, 196, 0.4)',
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  markerText: { fontFamily: fonts.display, color: colors.dim, fontSize: 14 },
+  body: { flex: 1, gap: 6 },
+  bossBody: { backgroundColor: colors.plate, borderRadius: 12, padding: 12, paddingTop: 20, overflow: 'hidden' },
+  hazard: { position: 'absolute', top: 0, left: 0, right: 0 },
+  bodyTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  name: { fontFamily: fonts.display, color: colors.text, fontSize: 19 },
+  bossName: { fontSize: 24 },
+  tagline: { fontFamily: fonts.body, color: colors.dim, fontSize: 15 },
+  play: {
+    fontFamily: fonts.display,
+    fontSize: 15,
+    color: colors.ink,
+    backgroundColor: colors.marquee,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    overflow: 'hidden',
+    boxShadow: plateShadow(3),
+  },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  tag: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: colors.marquee,
+    backgroundColor: 'rgba(255, 210, 63, 0.12)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     overflow: 'hidden',
   },
-  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  swatch: { width: 10, height: 10, borderRadius: 5 },
-  reward: { color: colors.dim, fontSize: 12, fontWeight: '700' },
-  right: { alignItems: 'flex-end' },
-  cardStars: { fontSize: 16, letterSpacing: 1 },
-  status: { color: colors.dim, fontSize: 15, fontWeight: '900', letterSpacing: 1 },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  swatch: { width: 12, height: 12, borderRadius: 6 },
+  reward: { fontFamily: fonts.body, color: colors.dim, fontSize: 14 },
+  stars: { fontSize: 18, letterSpacing: 1 },
 });

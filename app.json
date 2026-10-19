@@ -83,7 +83,8 @@
           "backgroundColor": "#08051c"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ]
   }
 }

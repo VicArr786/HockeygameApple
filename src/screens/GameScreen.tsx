@@ -13,14 +13,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { NeonButton } from '../components/NeonButton';
+import { Hazard } from '../components/Hazard';
+import { PlateButton } from '../components/PlateButton';
+import { SevenSeg } from '../components/SevenSeg';
 import { TableArt } from '../components/TableArt';
-import { MODS, TOWER_START, rewardInfo, stageColor, type CareerResult, type Reward, type Stage } from '../career';
+import { MODS, TOWER_START, rewardInfo, stageLabel, titleCase, type CareerResult, type Reward, type Stage } from '../career';
 import type { CpuParams } from '../game/ai';
 import { LIVES, WAVE, endlessRules } from '../endless';
 import { COUNTDOWN, Match } from '../game/match';
 import { paddleSkin, tableSkin } from '../skins';
-import { colors, glow } from '../theme';
+import { colors, fonts, glow, plateShadow } from '../theme';
 import type { GameMode } from './MenuScreen';
 
 const MARGIN = 10;
@@ -211,20 +213,18 @@ function Board(props: Props & { layout: Layout }) {
         {stage && g.phase === 'countdown' && <Intro stage={stage} W={W} H={H} />}
         {endless && g.phase === 'countdown' && (
           <Announce
-            kicker="ENDLESS"
-            kickerColor={colors.puck}
-            title="SURVIVE"
+            kicker="Endless"
+            title="Survive"
             boss={false}
-            chips={[`${LIVES} LIVES`, `NEW RULES EVERY ${WAVE} POINTS`]}
+            chips={[`${LIVES} lives`, `New rules every ${WAVE} points`]}
             W={W}
             H={H}
           />
         )}
         {endless && g.level && g.elapsed < g.announceUntil && g.phase !== 'over' && (
           <Announce
-            kicker={g.level.boss ? '⚠ BOSS WAVE ⚠' : 'NEW RULES'}
-            kickerColor={g.level.boss ? colors.p0 : colors.puck}
-            title={`WAVE ${g.level.wave + 1}`}
+            kicker={g.level.boss ? 'Boss wave' : 'New rules'}
+            title={`Wave ${g.level.wave + 1}`}
             boss={g.level.boss}
             chips={g.level.labels}
             W={W}
@@ -235,24 +235,26 @@ function Board(props: Props & { layout: Layout }) {
 
       {g.phase === 'paused' && (
         <Overlay>
-          <Text style={styles.overlayTitle}>PAUSED</Text>
-          <NeonButton label="RESUME" color={colors.p1} onPress={() => match.resume()} style={styles.overlayBtn} />
-          <NeonButton label="RESTART" color={colors.puck} onPress={restart} style={styles.overlayBtn} />
-          <NeonButton label={opponent ? 'CAREER' : 'MENU'} color={colors.p0} onPress={onExit} style={styles.overlayBtn} />
+          <Text style={styles.overlayTitle}>Paused</Text>
+          <PlateButton label="Resume" onPress={() => match.resume()} />
+          <PlateButton label="Restart" quiet onPress={restart} />
+          <PlateButton label={opponent ? 'Career' : 'Menu'} quiet onPress={onExit} />
         </Overlay>
       )}
 
       {g.phase === 'over' && endless && (
         <Overlay>
-          <Text style={[styles.overlayTitle, { color: colors.p1 }]}>GAME OVER</Text>
-          <Text style={[styles.endlessScore, { color: p0, textShadowColor: p0 }]}>{g.score[0]}</Text>
-          <Text style={[styles.finalScore, newBest && { color: colors.puck }]}>
+          <Text style={styles.overlayTitle}>Game over</Text>
+          <View style={styles.ledRow}>
+            <SevenSeg value={g.score[0]} height={64} color={p0} />
+          </View>
+          <Text style={[styles.overlayLine, newBest && styles.newBest]}>
             {newBest
-              ? 'NEW BEST!'
-              : `Best: ${endlessBest ?? 0} · Wave ${(g.level?.wave ?? 0) + 1}`}
+              ? 'New best!'
+              : `You reached wave ${(g.level?.wave ?? 0) + 1}. Your best is ${endlessBest ?? 0}.`}
           </Text>
-          <NeonButton label="PLAY AGAIN" color={colors.puck} onPress={restart} style={styles.overlayBtn} />
-          <NeonButton label="MENU" color={colors.p0} onPress={onExit} style={styles.overlayBtn} />
+          <PlateButton label="Play again" onPress={restart} />
+          <PlateButton label="Menu" quiet onPress={onExit} />
         </Overlay>
       )}
 
@@ -260,39 +262,39 @@ function Board(props: Props & { layout: Layout }) {
         <Overlay>
           {twoP && (
             <Text style={[styles.overlayTitle, styles.flipped, { color: pc(1) }]}>
-              {g.winner === 1 ? 'YOU WIN!' : 'YOU LOSE'}
+              {g.winner === 1 ? 'You win!' : 'You lose'}
             </Text>
           )}
-          <Text style={[styles.overlayTitle, { color: twoP ? pc(0) : pc(g.winner) }]}>
+          <Text style={[styles.overlayTitle, { color: twoP ? pc(0) : g.winner === 0 ? colors.marquee : colors.text }]}>
             {g.winner === 0
               ? stage?.index === TOWER_START - 1
-                ? 'CHAMPION!'
+                ? 'Champion!'
                 : stage?.boss
-                  ? 'BOSS DOWN!'
-                  : 'YOU WIN!'
+                  ? 'Boss down!'
+                  : 'You win!'
               : twoP
-                ? 'YOU LOSE'
-                : `${opponent ?? 'CPU'} WINS`}
+                ? 'You lose'
+                : `${opponent ? titleCase(opponent) : 'CPU'} wins`}
           </Text>
-          <Text style={styles.finalScore}>
-            {g.score[0]} – {g.score[1]}
-          </Text>
+          <View accessible accessibilityLabel={`${g.score[0]} to ${g.score[1]}`} style={styles.ledRow}>
+            <SevenSeg value={g.score[0]} height={40} color={p0} />
+            <View style={styles.ledDash} />
+            <SevenSeg value={g.score[1]} height={40} color={colors.p1} />
+          </View>
           {g.winner === 0 && result && <Stars n={result.stars} />}
           {g.winner === 0 && stage?.index === TOWER_START - 1 && (
-            <Text style={styles.towerOpen}>The Infinity Tower is open. How high can you climb?</Text>
+            <Text style={styles.overlayLine}>The Infinity Tower is open. See how high you can climb.</Text>
           )}
           {g.winner === 0 && result?.unlocks.map((r) => <Unlocked key={`${r.kind}:${r.id}`} reward={r} />)}
           {g.winner === 0 && onNext ? (
             <>
-              <NeonButton label="NEXT STAGE" color={colors.puck} onPress={onNext} style={styles.overlayBtn} />
-              {result && result.stars < 3 && (
-                <NeonButton label="REPLAY FOR ★★★" small color={colors.p1} onPress={restart} style={styles.overlayBtn} />
-              )}
+              <PlateButton label="Next stage" onPress={onNext} />
+              {result && result.stars < 3 && <PlateButton label="Replay for 3 stars" quiet onPress={restart} />}
             </>
           ) : (
-            <NeonButton label={stage ? 'RETRY' : 'REMATCH'} color={colors.p1} onPress={restart} style={styles.overlayBtn} />
+            <PlateButton label={stage ? 'Retry' : 'Rematch'} onPress={restart} />
           )}
-          <NeonButton label={stage ? 'CAREER' : 'MENU'} color={colors.p0} onPress={onExit} style={styles.overlayBtn} />
+          <PlateButton label={stage ? 'Career' : 'Menu'} quiet onPress={onExit} />
         </Overlay>
       )}
     </View>
@@ -303,7 +305,7 @@ function Stars({ n }: { n: number }) {
   return (
     <Text accessibilityLabel={`${n} of 3 stars`} style={styles.stars}>
       {[0, 1, 2].map((i) => (
-        <Text key={i} style={{ color: i < n ? colors.puck : 'rgba(143, 136, 184, 0.3)' }}>
+        <Text key={i} style={{ color: i < n ? colors.marquee : 'rgba(154, 147, 196, 0.3)' }}>
           ★
         </Text>
       ))}
@@ -315,9 +317,8 @@ function Stars({ n }: { n: number }) {
 function Intro({ stage, W, H }: { stage: Stage; W: number; H: number }) {
   return (
     <Announce
-      kicker={stage.boss ? '⚠ BOSS ⚠' : stage.floor ? `FLOOR ${stage.floor}` : 'CAREER'}
-      kickerColor={stageColor(stage)}
-      title={`VS ${stage.name}`}
+      kicker={stageLabel(stage)}
+      title={`vs ${stage.name}`}
       boss={stage.boss}
       chips={stage.mods.map((m) => MODS[m].label)}
       W={W}
@@ -326,18 +327,21 @@ function Intro({ stage, W, H }: { stage: Stage; W: number; H: number }) {
   );
 }
 
-type AnnounceProps = { kicker: string; kickerColor: string; title: string; boss: boolean; chips: string[]; W: number; H: number };
+type AnnounceProps = { kicker: string; title: string; boss: boolean; chips: string[]; W: number; H: number };
 
-function Announce({ kicker, kickerColor, title, boss, chips, W, H }: AnnounceProps) {
-  const color = boss ? colors.p0 : colors.p1;
+// A card pinned above the centre line. Bosses get the hazard-stripe decal.
+function Announce({ kicker, title, boss, chips, W, H }: AnnounceProps) {
   return (
-    <View pointerEvents="none" style={[styles.intro, { top: H * 0.2, width: W }]}>
-      <Text style={[styles.introKicker, { color: kickerColor }]}>{kicker}</Text>
-      <Text style={[styles.versus, { fontSize: W * (boss ? 0.085 : 0.07), color, textShadowColor: color }]}>{title}</Text>
+    <View pointerEvents="none" style={[styles.announce, { top: H * 0.21, left: W * 0.08, width: W * 0.84 }]}>
+      {boss && <Hazard width={W} height={12} style={styles.announceHazard} />}
+      <Text style={styles.announceKicker}>{kicker}</Text>
+      <Text style={[styles.announceTitle, { fontSize: W * (boss ? 0.08 : 0.066) }]} numberOfLines={1} adjustsFontSizeToFit>
+        {title}
+      </Text>
       {chips.length > 0 && (
-        <View style={styles.modRow}>
+        <View style={styles.tags}>
           {chips.map((c) => (
-            <Text key={c} style={styles.modChip}>
+            <Text key={c} style={styles.tag}>
               {c}
             </Text>
           ))}
@@ -349,14 +353,14 @@ function Announce({ kicker, kickerColor, title, boss, chips, W, H }: AnnouncePro
 
 // Endless: your score and the wave on the right, lives under the pause button.
 function EndlessHud({ g, W, H, p0 }: { g: Match; W: number; H: number; p0: string }) {
-  const size = Math.round(W * 0.11);
+  const size = Math.round(W * 0.1);
   return (
     <>
-      <View pointerEvents="none" style={[styles.scoreboard, { top: H / 2 - size * 1.45, right: W * 0.05, height: size * 2.9 }]}>
-        <Text style={[styles.waveLabel, { fontSize: size * 0.32 }]}>
-          {g.level?.boss ? 'BOSS\n' : ''}WAVE {(g.level?.wave ?? 0) + 1}
+      <View pointerEvents="none" style={[styles.scoreboard, { top: H / 2 - size * 1.6, right: W * 0.05, height: size * 3.2 }]}>
+        <Text style={[styles.waveLabel, { fontSize: size * 0.34 }]}>
+          {g.level?.boss ? 'Boss\n' : ''}wave {(g.level?.wave ?? 0) + 1}
         </Text>
-        <Text style={[styles.score, { fontSize: size, color: p0, textShadowColor: p0 }]}>{g.score[0]}</Text>
+        <SevenSeg value={g.score[0]} height={size} color={p0} />
       </View>
       <Text
         accessibilityLabel={`${g.lives} lives`}
@@ -408,26 +412,26 @@ function Paddle({ x, y, r, color, core = color }: { x: number; y: number; r: num
 }
 
 function Unlocked({ reward }: { reward: Reward }) {
-  const { label, color } = rewardInfo(reward);
+  const { label, color, core } = rewardInfo(reward);
   return (
-    <View style={[styles.unlocked, { borderColor: color, boxShadow: glow(color, 12, 0) }]}>
-      <Text style={styles.unlockedKicker}>UNLOCKED</Text>
-      <View style={styles.unlockedRow}>
-        <View style={[styles.unlockedSwatch, { backgroundColor: color, boxShadow: glow(color, 8, 1) }]} />
-        <Text style={styles.unlockedLabel}>{label}</Text>
-      </View>
+    <View style={styles.unlocked}>
+      <View style={[styles.unlockedSwatch, { borderColor: color, backgroundColor: core }]} />
+      <Text style={styles.unlockedLabel}>
+        Unlocked the <Text style={styles.unlockedName}>{label}</Text>
+      </Text>
     </View>
   );
 }
 
+// Scoreboard digits beside the centre line: theirs above, yours below.
 function Scoreboard({ score, W, H, twoP, p0 }: { score: [number, number]; W: number; H: number; twoP: boolean; p0: string }) {
-  const size = Math.round(W * 0.11);
+  const size = Math.round(W * 0.1);
   return (
-    <View pointerEvents="none" style={[styles.scoreboard, { top: H / 2 - size * 1.45, right: W * 0.05, height: size * 2.9 }]}>
-      <Text style={[styles.score, { fontSize: size, color: colors.p1, textShadowColor: colors.p1 }, twoP && styles.flipped]}>
-        {score[1]}
-      </Text>
-      <Text style={[styles.score, { fontSize: size, color: p0, textShadowColor: p0 }]}>{score[0]}</Text>
+    <View pointerEvents="none" style={[styles.scoreboard, { top: H / 2 - size * 1.6, right: W * 0.05, height: size * 3.2 }]}>
+      <View style={twoP && styles.flipped}>
+        <SevenSeg value={score[1]} height={size} color={colors.p1} />
+      </View>
+      <SevenSeg value={score[0]} height={size} color={p0} />
     </View>
   );
 }
@@ -440,14 +444,14 @@ function Banners({ g, W, H, twoP, pc }: BannerProps) {
   if (g.phase === 'countdown') {
     text = String(Math.max(1, COUNTDOWN - Math.floor(g.phaseT)));
   } else if (g.phase === 'play' && g.phaseT < 0.6 && g.score[0] + g.score[1] === 0) {
-    text = 'GO!';
+    text = 'Go!';
     color = colors.puck;
   } else if (g.phase === 'goal') {
-    text = 'GOAL!';
+    text = 'Goal!';
     color = pc(g.lastScorer);
   }
   if (!text) return null;
-  const size = W * (text.length > 1 ? 0.16 : 0.22);
+  const size = W * (text.length > 1 ? 0.15 : 0.2);
   const banner = (flip: boolean, top: number) => (
     <Text
       style={[styles.banner, { top, width: W, fontSize: size, color, textShadowColor: color }, flip && styles.flipped]}
@@ -459,7 +463,7 @@ function Banners({ g, W, H, twoP, pc }: BannerProps) {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {twoP && banner(true, H * 0.25 - size * 0.7)}
-      {banner(false, twoP ? H * 0.75 - size * 0.7 : H / 2 - size * 1.6)}
+      {banner(false, twoP ? H * 0.75 - size * 0.7 : H / 2 - size * 1.5)}
     </View>
   );
 }
@@ -477,7 +481,6 @@ const styles = StyleSheet.create({
   table: { position: 'absolute', backgroundColor: colors.table, borderRadius: 14, overflow: 'hidden' },
   circle: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   scoreboard: { position: 'absolute', justifyContent: 'space-between', alignItems: 'center' },
-  score: { fontWeight: '900', fontVariant: ['tabular-nums'], textShadowRadius: 12, textShadowOffset: { width: 0, height: 0 }, opacity: 0.9 },
   flipped: { transform: [{ rotate: '180deg' }] },
   pauseBtn: {
     position: 'absolute',
@@ -498,58 +501,64 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     textAlign: 'center',
-    fontWeight: '900',
-    fontStyle: 'italic',
-    textShadowRadius: 20,
+    fontFamily: fonts.display,
+    textShadowRadius: 14,
     textShadowOffset: { width: 0, height: 0 },
   },
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(4, 2, 16, 0.7)', alignItems: 'center', justifyContent: 'center' },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center' },
   overlayCard: {
-    backgroundColor: colors.panel,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: colors.tableEdge,
-    padding: 28,
+    backgroundColor: colors.plate,
+    borderRadius: 18,
+    padding: 22,
     gap: 14,
-    width: '80%',
+    width: '84%',
     maxWidth: 360,
     alignItems: 'stretch',
+    boxShadow: plateShadow(8),
   },
-  overlayTitle: { color: colors.text, fontSize: 34, fontWeight: '900', fontStyle: 'italic', textAlign: 'center', letterSpacing: 2 },
-  finalScore: { color: colors.dim, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 6 },
-  overlayBtn: { alignSelf: 'stretch' },
-  intro: { position: 'absolute', left: 0, alignItems: 'center', gap: 6, paddingHorizontal: 12 },
-  introKicker: { fontSize: 13, fontWeight: '900', letterSpacing: 4 },
-  modRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 2 },
-  modChip: {
-    color: colors.puck,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1.5,
-    borderWidth: 1,
-    borderColor: `${colors.puck}88`,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  overlayTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 32 },
+  overlayLine: { fontFamily: fonts.body, color: colors.dim, fontSize: 16, lineHeight: 21 },
+  newBest: { fontFamily: fonts.display, color: colors.marquee, fontSize: 20 },
+  ledRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 14,
+    backgroundColor: colors.plateEdge,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  ledDash: { width: 14, height: 5, borderRadius: 3, backgroundColor: colors.dim, opacity: 0.6 },
+  announce: {
+    position: 'absolute',
+    backgroundColor: 'rgba(23, 19, 43, 0.86)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 12,
+    gap: 4,
     overflow: 'hidden',
   },
-  waveLabel: { color: colors.p1, fontWeight: '900', letterSpacing: 1, textAlign: 'center', opacity: 0.85 },
-  hearts: { position: 'absolute', left: 10, color: colors.p0, letterSpacing: 2, textShadowColor: colors.p0, textShadowRadius: 8, textShadowOffset: { width: 0, height: 0 } },
-  endlessScore: { fontSize: 64, fontWeight: '900', textAlign: 'center', fontVariant: ['tabular-nums'], textShadowRadius: 16, textShadowOffset: { width: 0, height: 0 } },
-  stars: { fontSize: 34, letterSpacing: 6, textAlign: 'center', marginTop: -4 },
-  towerOpen: { color: colors.text, fontSize: 14, textAlign: 'center', fontWeight: '700' },
-  versus: {
-    textAlign: 'center',
-    color: colors.p1,
-    fontWeight: '900',
-    letterSpacing: 4,
-    textShadowColor: colors.p1,
-    textShadowRadius: 12,
-    textShadowOffset: { width: 0, height: 0 },
+  announceHazard: { marginHorizontal: -14, marginTop: -10, marginBottom: 6 },
+  announceKicker: { fontFamily: fonts.body, color: colors.dim, fontSize: 14 },
+  announceTitle: { fontFamily: fonts.display, color: colors.text },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  tag: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: colors.marquee,
+    backgroundColor: 'rgba(255, 210, 63, 0.14)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
   },
-  unlocked: { alignSelf: 'stretch', borderWidth: 1.5, borderRadius: 14, padding: 12, gap: 8, marginBottom: 4 },
-  unlockedKicker: { color: colors.dim, fontSize: 12, fontWeight: '800', letterSpacing: 3, textAlign: 'center' },
-  unlockedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  unlockedSwatch: { width: 18, height: 18, borderRadius: 9 },
-  unlockedLabel: { color: colors.text, fontSize: 17, fontWeight: '800' },
+  waveLabel: { fontFamily: fonts.bold, color: colors.p1, textAlign: 'center', opacity: 0.85 },
+  hearts: { position: 'absolute', left: 10, color: colors.p0, letterSpacing: 2 },
+  stars: { fontSize: 32, letterSpacing: 4 },
+  unlocked: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.plateEdge, borderRadius: 10, padding: 10 },
+  unlockedSwatch: { width: 22, height: 22, borderRadius: 11, borderWidth: 4 },
+  unlockedLabel: { fontFamily: fonts.body, color: colors.dim, fontSize: 16, flex: 1 },
+  unlockedName: { fontFamily: fonts.bold, color: colors.text },
 });

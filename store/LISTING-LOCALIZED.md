@@ -5,7 +5,7 @@ use the language menu (top right) to add each language, and paste the fields
 below. Screenshots carry over from English automatically.
 
 The game itself has almost no text, so it plays fine in every language. Keep
-the app name **Neon Air Hockey** everywhere; it's the brand. Apple already
+the app name **Neon Air Hockey: Boss Rush** everywhere; it's the brand. Apple already
 searches the name and subtitle, so the keywords don't repeat those words.
 
 Limits: subtitle 30 characters, promotional text 170, keywords 100 (all

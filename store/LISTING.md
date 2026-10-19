@@ -2,7 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| App name (30) | Neon Air Hockey |
+| App name (30) | Neon Air Hockey: Boss Rush |
+| Name under the icon | Neon Air Hockey (set in `app.json`; doesn't have to match) |
 | Subtitle (30) | Arcade air hockey, neon style |
 | Primary category | Games → Sports |
 | Secondary category | Games → Arcade |
@@ -12,6 +13,7 @@
 | SKU | neon-air-hockey-001 |
 | Privacy policy URL | `https://<your-project>.vercel.app/privacy` (see `website/README.md`) |
 | Support URL | `https://<your-project>.vercel.app/support` |
+| Support email | tend-us.support@proton.me |
 | Marketing URL | `https://<your-project>.vercel.app/` (optional) |
 | Copyright | 2026 <your name> |
 
@@ -21,7 +23,7 @@
 
 ## Description
 
-Bring the arcade home. Neon Air Hockey is fast, physical, two-finger-friendly air hockey with a glowing neon table.
+Bring the arcade home. Neon Air Hockey: Boss Rush is fast, physical, two-finger-friendly air hockey with a glowing neon table.
 
 DRAG TO PLAY
 Your paddle follows your finger exactly like the real thing — flick it hard to fire the puck, angle it to bank shots off the rails.

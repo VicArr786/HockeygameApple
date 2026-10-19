@@ -3,11 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Neon Air Hockey</title>
-  <meta name="description" content="Arcade air hockey for iPhone and iPad. 12 leagues, 12 bosses, an endless tower and 28 neon unlocks, or play a friend on one device.">
-  <meta name="theme-color" content="#08051c">
+  <title>Neon Air Hockey: Boss Rush</title>
+  <meta name="description" content="Arcade air hockey for iPhone and iPad. 12 leagues, 12 bosses, an endless tower, a survival mode, and two-player on one device.">
+  <meta name="theme-color" content="#17132b">
   <link rel="icon" href="/favicon.png">
   <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;700&family=Bungee&family=Bungee+Inline&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -23,25 +26,35 @@
   </header>
 
   <main>
-    <div class="wrap hero">
-      <img class="icon" src="/icon.png" alt="Neon Air Hockey app icon">
-      <h1><small>NEON</small>AIR HOCKEY</h1>
-      <p class="tagline">Fast, glowing arcade air hockey for iPhone and iPad. Fight through 12 leagues of rivals and bosses, or play a friend on one screen.</p>
-      <!-- Replace the href with your App Store link once the app is live. -->
-      <a class="badge" href="#">COMING SOON TO THE APP STORE</a>
+    <div class="wrap">
+      <h1 class="logo"><span class="neon">Neon</span><span class="main">Air Hockey</span></h1>
+      <p class="lede">Arcade air hockey for iPhone and iPad. Drag your paddle, slam the puck, and work your way up to a final boss that cheats.</p>
+      <!-- Swap in the App Store link and drop aria-disabled once the app is live. -->
+      <a class="plate" href="#" aria-disabled="true">Get it on the App Store</a>
+      <span class="soon">Coming soon.</span>
 
       <div class="shots">
         <img src="/screenshot-play.jpg" alt="A match in progress on the neon table" width="440" height="956">
-        <img src="/screenshot-career.jpg" alt="The Career ladder of CPU rivals" width="440" height="956">
+        <img src="/screenshot-career.jpg" alt="The Career ladder, ending in a boss stage" width="440" height="956">
       </div>
 
-      <div class="features">
-        <div class="card"><h3>12 BOSSES</h3><p>96 Career stages, and every league ends in a boss that bends the rules.</p></div>
-        <div class="card"><h3>INFINITY TOWER</h3><p>Endless floors after the Career. How high can you climb?</p></div>
-        <div class="card"><h3>ENDLESS MODE</h3><p>3 lives, a CPU that gets sharper every goal, and new rules every 5 points.</p></div>
-        <div class="card"><h3>28 UNLOCKS</h3><p>Earn stars and beat bosses to unlock neon paddles and tables.</p></div>
-        <div class="card"><h3>2 PLAYERS</h3><p>Lay the device flat and play face to face with full multi-touch.</p></div>
-        <div class="card"><h3>NO ADS</h3><p>No ads, no tracking, no account. Works offline.</p></div>
+      <div class="modes">
+        <section class="mode" style="--c: #ffd23f">
+          <h2>Career</h2>
+          <p>96 stages across 12 leagues. Every league ends in a boss that changes the rules: a giant paddle, a goal the width of a coin slot, a puck that fades out of sight. Beat the last one and an endless tower opens up.</p>
+        </section>
+        <section class="mode" style="--c: #b36bff">
+          <h2>Endless</h2>
+          <p>Three lives. The CPU gets sharper with every goal you score, and the rules shuffle every five points.</p>
+        </section>
+        <section class="mode" style="--c: #28f0ff">
+          <h2>Two players</h2>
+          <p>Lay your phone or iPad flat and play face to face, one end each, both hands on the glass.</p>
+        </section>
+        <section class="mode" style="--c: #ff2daa">
+          <h2>No ads, no accounts</h2>
+          <p>It's free, works offline and collects no data. Stars and bosses unlock 28 paddles and tables.</p>
+        </section>
       </div>
     </div>
   </main>
@@ -49,7 +62,7 @@
   <footer class="site">
     <div class="wrap">
       <span>© 2026 [YOUR NAME]</span>
-      <span><a href="/support">Support</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></span>
+      <nav><a href="/support">Support</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
     </div>
   </footer>
 </body>

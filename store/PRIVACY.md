@@ -1,10 +1,10 @@
-# Neon Air Hockey — Privacy Policy
+# Neon Air Hockey: Boss Rush — Privacy Policy
 
 _Last updated: 19 October 2026_
 
 _The published version of this policy is `website/privacy.html`; keep the two in step._
 
-Neon Air Hockey does not collect, store, transmit or share any personal data.
+Neon Air Hockey: Boss Rush does not collect, store, transmit or share any personal data.
 
 - No accounts, sign-in, or user profiles.
 - No analytics, advertising, or tracking SDKs.
@@ -23,4 +23,4 @@ including children under 13.
 
 ## Contact
 
-Questions about this policy: <your support email>
+Questions about this policy: tend-us.support@proton.me

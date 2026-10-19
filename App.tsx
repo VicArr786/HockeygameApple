@@ -1,3 +1,10 @@
+// Per-weight imports so only these four font files ship in the app.
+import { BarlowSemiCondensed_500Medium } from '@expo-google-fonts/barlow-semi-condensed/500Medium';
+import { BarlowSemiCondensed_700Bold } from '@expo-google-fonts/barlow-semi-condensed/700Bold';
+import { Bungee_400Regular } from '@expo-google-fonts/bungee/400Regular';
+import { BungeeInline_400Regular } from '@expo-google-fonts/bungee-inline/400Regular';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -12,8 +19,24 @@ import { MenuScreen, type GameMode } from './src/screens/MenuScreen';
 import { SettingsProvider, useSettings } from './src/settings';
 
 initFeedback();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    BungeeInline_400Regular,
+    Bungee_400Regular,
+    BarlowSemiCondensed_500Medium,
+    BarlowSemiCondensed_700Bold,
+  });
+  const ready = fontsLoaded || !!fontError;
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+
+  // Keep the splash up until the fonts are in; a font error falls back to system type.
+  if (!ready) return null;
+
   return (
     <SafeAreaProvider>
       <SettingsProvider>

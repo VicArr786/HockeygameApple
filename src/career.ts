@@ -15,16 +15,16 @@ export const STAGES_PER_LEAGUE = 8;
 export type ModId = 'giant' | 'fortress' | 'wide' | 'tiny' | 'hyper' | 'ice' | 'mini' | 'ghost' | 'down1' | 'down2';
 
 export const MODS: Record<ModId, { label: string; desc: string }> = {
-  giant: { label: 'GIANT PADDLE', desc: 'Their paddle is huge' },
-  fortress: { label: 'FORTRESS', desc: 'Their goal is narrow' },
-  wide: { label: 'WIDE OPEN', desc: 'Your goal is wider' },
-  tiny: { label: 'SHRUNK', desc: 'Your paddle is smaller' },
-  hyper: { label: 'HYPER PUCK', desc: 'The puck is faster' },
-  ice: { label: 'BLACK ICE', desc: 'The puck never slows down' },
-  mini: { label: 'MINI PUCK', desc: 'The puck is tiny' },
-  ghost: { label: 'GHOST PUCK', desc: 'The puck fades in and out' },
-  down1: { label: 'HEAD START', desc: 'They start 1–0 up' },
-  down2: { label: 'HEAD START', desc: 'They start 2–0 up' },
+  giant: { label: 'Giant paddle', desc: 'Their paddle is huge' },
+  fortress: { label: 'Fortress goal', desc: 'Their goal is narrow' },
+  wide: { label: 'Wide open', desc: 'Your goal is wider' },
+  tiny: { label: 'Shrunk', desc: 'Your paddle is smaller' },
+  hyper: { label: 'Hyper puck', desc: 'The puck is faster' },
+  ice: { label: 'Black ice', desc: 'The puck never slows down' },
+  mini: { label: 'Mini puck', desc: 'The puck is tiny' },
+  ghost: { label: 'Ghost puck', desc: 'The puck fades in and out' },
+  down1: { label: 'Head start', desc: 'They start 1–0 up' },
+  down2: { label: 'Head start', desc: 'They start 2–0 up' },
 };
 
 export function simMods(mods: ModId[]): SimMods {
@@ -58,73 +58,73 @@ type League = {
 
 export const LEAGUES: League[] = [
   {
-    name: 'NEON ROOKIES',
+    name: 'Neon Rookies',
     color: '#9dff3c',
     rivals: ['PIP', 'DOT', 'ZIG', 'FIZZ', 'MOJO', 'NIX', 'BEEP'],
     boss: { name: 'GATEKEEPER', title: 'Nobody gets in without a fight', style: 'wall', mods: ['giant'] },
   },
   {
-    name: 'BACKSTREET',
+    name: 'Backstreet',
     color: '#2bd67b',
     rivals: ['GRIT', 'SLAB', 'RUST', 'DUKE', 'KNOX', 'TANK', 'MACE'],
     boss: { name: 'BRICKHOUSE', title: 'Built a wall across the goal', style: 'wall', mods: ['fortress'] },
   },
   {
-    name: 'CHROME CIRCUIT',
+    name: 'Chrome Circuit',
     color: '#ff8a1f',
     rivals: ['DRIFT', 'REV', 'NITRO', 'PISTON', 'CLUTCH', 'GEARS', 'TORQUE'],
     boss: { name: 'TURBO', title: 'Redlines every rally', style: 'speedster', mods: ['hyper'] },
   },
   {
-    name: 'FROST LEAGUE',
+    name: 'Frost League',
     color: '#5ab8ff',
     rivals: ['FROST', 'SLEET', 'YETI', 'ICICLE', 'BLIZZ', 'HAIL', 'POLAR'],
     boss: { name: 'GLACIER', title: 'The table is pure ice', style: 'sniper', mods: ['ice'] },
   },
   {
-    name: 'PHANTOM LEAGUE',
+    name: 'Phantom League',
     color: '#b36bff',
     rivals: ['SHADE', 'WISP', 'HAUNT', 'MIRAGE', 'SPOOK', 'VEIL', 'ECHO'],
     boss: { name: 'SPECTRE', title: 'Now you see it…', style: 'striker', mods: ['ghost'] },
   },
   {
-    name: 'RED ZONE',
+    name: 'Red Zone',
     color: '#ff4f6d',
     rivals: ['BLAZE', 'FURY', 'RUCKUS', 'BRAWL', 'HAVOC', 'RAGE', 'SCAR'],
     boss: { name: 'WARDEN', title: 'Starts ahead, stays ahead', style: 'wall', mods: ['down2', 'fortress'] },
   },
   {
-    name: 'STORM DIVISION',
+    name: 'Storm Division',
     color: '#ff3b4d',
     rivals: ['VOLT', 'ZAP', 'THUNDER', 'GALE', 'CYCLONE', 'SURGE', 'FLASH'],
     boss: { name: 'TEMPEST', title: 'A tiny puck at lightning speed', style: 'speedster', mods: ['mini', 'hyper'] },
   },
   {
-    name: 'SYNTH CITY',
+    name: 'Synth City',
     color: '#ff2daa',
     rivals: ['NOVA', 'LASER', 'PIXEL', 'RETRO', 'SYNTH', 'NEON', 'VAPOR'],
     boss: { name: 'HYDRA', title: 'Huge paddle, and your goal is wide open', style: 'striker', mods: ['giant', 'wide'] },
   },
   {
-    name: 'GOLD COAST',
+    name: 'Gold Coast',
     color: '#ffd23f',
     rivals: ['COIN', 'BULLION', 'JACKPOT', 'BLING', 'KARAT', 'MINT', 'TYCOON'],
     boss: { name: 'MIDAS', title: 'Shrinks you down to size', style: 'sniper', mods: ['tiny', 'fortress'] },
   },
   {
-    name: 'VOLCANO',
+    name: 'Volcano',
     color: '#ff6a00',
     rivals: ['CINDER', 'ASH', 'EMBER', 'SCORCH', 'PYRO', 'CRATER', 'FLARE'],
     boss: { name: 'MAGMA', title: 'A blazing puck you can barely see', style: 'wild', mods: ['hyper', 'ghost'] },
   },
   {
-    name: 'ROYAL COURT',
+    name: 'Royal Court',
     color: '#e8fbff',
     rivals: ['KNIGHT', 'BISHOP', 'ROOK', 'DUCHESS', 'BARON', 'PRINCE', 'QUEEN'],
     boss: { name: 'THE KING', title: 'Plays by his own rules', style: 'balanced', mods: ['giant', 'fortress', 'down1'] },
   },
   {
-    name: 'OMEGA LEAGUE',
+    name: 'Omega League',
     color: '#ffbf3c',
     rivals: ['RAZOR', 'IRON', 'APEX', 'TITAN', 'ZENITH', 'NEMESIS', 'ORACLE'],
     boss: { name: 'OMEGA', title: 'The final boss', style: 'striker', mods: ['giant', 'fortress', 'hyper', 'down2'] },
@@ -264,10 +264,11 @@ function towerFloor(index: number): Stage {
   });
 }
 
-export const leagueName = (s: Stage) => (s.league < 0 ? 'INFINITY TOWER' : LEAGUES[s.league].name);
-export const stageColor = (s: Stage) => (s.league < 0 ? TOWER_COLOR : LEAGUES[s.league].color);
+export const leagueName = (s: Stage) => (s.league < 0 ? 'Infinity Tower' : LEAGUES[s.league].name);
+// Rival names are stored in caps for the marquee font; this is for running text.
+export const titleCase = (name: string) => name.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
 export const stageLabel = (s: Stage) =>
-  s.league < 0 ? `Floor ${s.floor}` : `${LEAGUES[s.league].name} · ${(s.index % STAGES_PER_LEAGUE) + 1}/${STAGES_PER_LEAGUE}`;
+  s.league < 0 ? `Infinity Tower, floor ${s.floor}` : `${LEAGUES[s.league].name}, stage ${(s.index % STAGES_PER_LEAGUE) + 1} of ${STAGES_PER_LEAGUE}`;
 
 // ---------------------------------------------------------------------------
 // Stars and ranks
@@ -282,17 +283,17 @@ export function starsFor(target: number, conceded: number): number {
 export const totalStars = (stars: number[]) => stars.reduce((a, b) => a + (b || 0), 0);
 
 const RANKS: [number, string][] = [
-  [0, 'ROOKIE'],
-  [10, 'AMATEUR'],
-  [30, 'CONTENDER'],
-  [60, 'PRO'],
-  [100, 'ALL-STAR'],
-  [150, 'ELITE'],
-  [200, 'MASTER'],
-  [250, 'GRANDMASTER'],
-  [288, 'LEGEND'],
-  [400, 'MYTHIC'],
-  [600, 'IMMORTAL'],
+  [0, 'Rookie'],
+  [10, 'Amateur'],
+  [30, 'Contender'],
+  [60, 'Pro'],
+  [100, 'All-Star'],
+  [150, 'Elite'],
+  [200, 'Master'],
+  [250, 'Grandmaster'],
+  [288, 'Legend'],
+  [400, 'Mythic'],
+  [600, 'Immortal'],
 ];
 
 export function rank(stars: number): { name: string; next: number | null } {
@@ -364,8 +365,8 @@ export function isUnlocked(r: Reward, p: Progress): boolean {
 export function unlockHint(r: Reward): string {
   const src = unlockSource(r);
   if (!src) return '';
-  if ('boss' in src) return `Beat ${LEAGUES[src.boss].boss.name}, the ${LEAGUES[src.boss].name} boss, to unlock`;
-  return `Collect ${src.stars} ★ in Career to unlock`;
+  if ('boss' in src) return `Beat ${titleCase(LEAGUES[src.boss].boss.name)}, the ${LEAGUES[src.boss].name} boss, to unlock this.`;
+  return `Collect ${src.stars} stars in Career to unlock this.`;
 }
 
 export function bossReward(s: Stage): Reward | undefined {

@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { isUnlocked, rank, stage, stageLabel, totalStars, unlockHint, type Reward } from '../career';
-import { NeonButton } from '../components/NeonButton';
+import { TOWER_START, isUnlocked, rank, stage, stageLabel, titleCase, totalStars, unlockHint, type Reward } from '../career';
+import { PlateButton } from '../components/PlateButton';
 import { buzz, playSound } from '../feedback';
 import type { Difficulty } from '../game/ai';
 import { useSettings } from '../settings';
 import { PADDLES, TABLES } from '../skins';
-import { colors, glow } from '../theme';
+import { colors, fonts, glow } from '../theme';
 
 export type GameMode = '1p' | '2p' | 'endless';
 
 const DIFFICULTIES: { key: Difficulty; label: string }[] = [
-  { key: 'easy', label: 'EASY' },
-  { key: 'normal', label: 'NORMAL' },
-  { key: 'hard', label: 'HARD' },
+  { key: 'easy', label: 'Easy' },
+  { key: 'normal', label: 'Normal' },
+  { key: 'hard', label: 'Hard' },
 ];
 const TARGETS = [5, 7, 11];
 const ENDLESS_COLOR = '#b36bff';
@@ -24,14 +24,16 @@ type MenuProps = { onPlay: (mode: GameMode) => void; onCareer: () => void };
 
 export function MenuScreen({ onPlay, onCareer }: MenuProps) {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { settings, update } = useSettings();
+  // Fit "Air Hockey" to the column without clipping the tube glow.
+  const logoSize = Math.min(52, (Math.min(width, 520) - 40) / 6.6);
   const rec = settings.record[settings.difficulty];
   const { beaten } = settings;
   const stars = totalStars(settings.stars);
   const progress = { beaten, stars };
-  const nextStage = stage(beaten);
+  const next = stage(beaten);
   const unlocked = (kind: Reward['kind'], id: string) => isUnlocked({ kind, id }, progress);
-  const owned = PADDLES.filter((p) => unlocked('paddle', p.id)).length + TABLES.filter((t) => unlocked('table', t.id)).length;
   // Shown under the swatches after tapping a locked one.
   const [hint, setHint] = useState<string | null>(null);
 
@@ -49,36 +51,40 @@ export function MenuScreen({ onPlay, onCareer }: MenuProps) {
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 28 }]}
     >
-      <View style={styles.titleBlock}>
-        <Text style={[styles.titleSmall, { textShadowColor: colors.p1 }]}>NEON</Text>
-        <Text style={[styles.title, { textShadowColor: colors.p0 }]} adjustsFontSizeToFit numberOfLines={1}>
-          AIR HOCKEY
-        </Text>
+      <View accessible accessibilityRole="header" accessibilityLabel="Neon Air Hockey" style={styles.logo}>
+        <Text style={styles.logoNeon}>Neon</Text>
+        <Text style={[styles.logoMain, { fontSize: logoSize, lineHeight: logoSize * 1.12 }]}>Air Hockey</Text>
       </View>
 
-      <View style={styles.section}>
-        <NeonButton label="CAREER" color={colors.puck} onPress={onCareer} />
+      <View style={styles.block}>
+        <PlateButton label="Career" color={colors.marquee} onPress={onCareer} />
         <Text style={styles.caption}>
-          {`${rank(stars).name} · ★ ${stars} · Next: ${nextStage.boss ? 'BOSS ' : ''}${nextStage.name} (${stageLabel(nextStage)})`}
+          {next.boss ? 'Boss next: ' : 'Next up: '}
+          <Text style={styles.captionStrong}>{titleCase(next.name)}</Text>, {stageLabel(next)}.{'\n'}
+          {rank(stars).name}, {stars} {stars === 1 ? 'star' : 'stars'}.
         </Text>
       </View>
 
-      <View style={styles.section}>
-        <NeonButton label="ENDLESS" color={ENDLESS_COLOR} onPress={() => onPlay('endless')} />
-        <Text style={styles.caption}>
-          {settings.endlessBest > 0
-            ? `Best: ${settings.endlessBest} · how long can you survive?`
-            : '3 lives, new rules every 5 points · how long can you survive?'}
-        </Text>
+      <View style={styles.pair}>
+        <View style={styles.half}>
+          <PlateButton label="Endless" color={ENDLESS_COLOR} onPress={() => onPlay('endless')} />
+          <Text style={styles.caption}>
+            {settings.endlessBest > 0 ? `Best run: ${settings.endlessBest}` : 'Three lives. Survive.'}
+          </Text>
+        </View>
+        <View style={styles.half}>
+          <PlateButton label="2 Players" color={colors.p1} onPress={() => onPlay('2p')} />
+          <Text style={styles.caption}>One device, one end each.</Text>
+        </View>
       </View>
 
-      <View style={styles.section}>
-        <NeonButton label="QUICK MATCH" color={colors.p0} onPress={() => onPlay('1p')} />
+      <View style={styles.block}>
+        <PlateButton label="Quick match" color={colors.p0} onPress={() => onPlay('1p')} />
         <View style={styles.row}>
           {DIFFICULTIES.map((d) => (
-            <NeonButton
+            <PlateButton
               key={d.key}
               small
               label={d.label}
@@ -90,36 +96,29 @@ export function MenuScreen({ onPlay, onCareer }: MenuProps) {
           ))}
         </View>
         <Text style={styles.caption}>
-          Record on {settings.difficulty}: {rec.w}W – {rec.l}L
+          {rec.w} won, {rec.l} lost on {settings.difficulty}.
         </Text>
       </View>
 
-      <View style={styles.section}>
-        <NeonButton label="2 PLAYERS" color={colors.p1} onPress={() => onPlay('2p')} />
-        <Text style={styles.caption}>Same device — one player at each end</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.heading}>FIRST TO</Text>
-        <View style={styles.row}>
-          {TARGETS.map((t) => (
-            <NeonButton
-              key={t}
-              small
-              label={String(t)}
-              color={colors.puck}
-              selected={settings.target === t}
-              onPress={() => update({ target: t })}
-              style={styles.flex}
-            />
-          ))}
+      <View style={styles.panel}>
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>First to</Text>
+          <View style={[styles.row, styles.flex]}>
+            {TARGETS.map((t) => (
+              <PlateButton
+                key={t}
+                small
+                label={String(t)}
+                color={colors.marquee}
+                selected={settings.target === t}
+                onPress={() => update({ target: t })}
+                style={styles.flex}
+              />
+            ))}
+          </View>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>
-          STYLE · {owned}/{PADDLES.length + TABLES.length}
-        </Text>
+        <Text style={styles.settingLabel}>Your paddle</Text>
         <View style={styles.swatches}>
           {PADDLES.map((p) => (
             <Swatch
@@ -134,6 +133,8 @@ export function MenuScreen({ onPlay, onCareer }: MenuProps) {
             />
           ))}
         </View>
+
+        <Text style={styles.settingLabel}>Table</Text>
         <View style={styles.swatches}>
           {TABLES.map((t) => (
             <Swatch
@@ -148,13 +149,37 @@ export function MenuScreen({ onPlay, onCareer }: MenuProps) {
             />
           ))}
         </View>
-        {hint && <Text style={styles.caption}>{hint}</Text>}
+        {hint && <Text style={styles.hint}>{hint}</Text>}
+
+        <View style={styles.toggles}>
+          <Toggle label="Sound" value={settings.sound} onChange={(sound) => update({ sound })} />
+          <Toggle label="Vibration" value={settings.haptics} onChange={(haptics) => update({ haptics })} />
+        </View>
       </View>
 
-      <View style={[styles.section, styles.toggles]}>
-        <Toggle label="Sound" value={settings.sound} onChange={(sound) => update({ sound })} />
-        <Toggle label="Vibration" value={settings.haptics} onChange={(haptics) => update({ haptics })} />
-      </View>
+      {/* Local testing only: __DEV__ is false in App Store builds, so none of this ships. */}
+      {__DEV__ && (
+        <View style={styles.row}>
+          <PlateButton
+            small
+            selected={false}
+            label="Dev: unlock all"
+            onPress={() => {
+              // Every league 3-starred and 30 tower floors climbed: all skins, ranks and pages open.
+              const cleared = TOWER_START + 30;
+              update({ beaten: cleared, stars: Array(cleared).fill(3), endlessBest: Math.max(settings.endlessBest, 50) });
+            }}
+            style={styles.flex}
+          />
+          <PlateButton
+            small
+            selected={false}
+            label="Dev: reset"
+            onPress={() => update({ beaten: 0, stars: [], endlessBest: 0, paddle: 'pink', table: 'midnight' })}
+            style={styles.flex}
+          />
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -169,6 +194,7 @@ type SwatchProps = {
   onPress: () => void;
 };
 
+// Locked swatches are an empty dashed socket; tap one to see how to earn it.
 function Swatch({ label, color, fill, dot, selected, locked, onPress }: SwatchProps) {
   return (
     <Pressable
@@ -176,14 +202,16 @@ function Swatch({ label, color, fill, dot, selected, locked, onPress }: SwatchPr
       accessibilityLabel={locked ? `${label}, locked` : label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      hitSlop={4}
+      hitSlop={3}
       style={[
         styles.swatch,
-        { borderColor: locked ? 'rgba(143, 136, 184, 0.35)' : color, backgroundColor: locked ? 'transparent' : fill },
-        selected && { boxShadow: glow(color, 10, 2) },
+        locked
+          ? styles.swatchLocked
+          : { borderColor: color, backgroundColor: fill, boxShadow: selected ? glow(color, 8, 1) : undefined },
+        selected && styles.swatchSelected,
       ]}
     >
-      {locked ? <Text style={styles.lock}>🔒</Text> : <View style={[styles.swatchDot, { backgroundColor: dot }, selected && styles.swatchDotOn]} />}
+      {!locked && <View style={[styles.swatchDot, { backgroundColor: dot }]} />}
     </Pressable>
   );
 }
@@ -196,8 +224,8 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
         accessibilityLabel={label}
         value={value}
         onValueChange={onChange}
-        trackColor={{ true: colors.p1, false: '#2a2550' }}
-        thumbColor="#fff"
+        trackColor={{ true: colors.marquee, false: colors.plateEdge }}
+        thumbColor={colors.text}
       />
     </View>
   );
@@ -205,36 +233,40 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 28, maxWidth: 520, width: '100%', alignSelf: 'center' },
-  titleBlock: { alignItems: 'center', marginBottom: 8 },
-  titleSmall: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: 14,
+  content: { paddingHorizontal: 20, gap: 22, maxWidth: 520, width: '100%', alignSelf: 'center' },
+  logo: { marginBottom: 6 },
+  logoNeon: {
+    fontFamily: fonts.logo,
+    fontSize: 34,
+    color: colors.p0,
+    textShadowColor: colors.p0,
     textShadowRadius: 14,
     textShadowOffset: { width: 0, height: 0 },
   },
-  title: {
-    color: colors.text,
-    fontSize: 46,
-    fontWeight: '900',
-    fontStyle: 'italic',
-    letterSpacing: 3,
+  logoMain: {
+    fontFamily: fonts.logo,
+    color: colors.p1,
+    textShadowColor: colors.p1,
     textShadowRadius: 18,
     textShadowOffset: { width: 0, height: 0 },
   },
-  section: { gap: 12 },
-  row: { flexDirection: 'row', gap: 10 },
+  block: { gap: 10 },
+  pair: { flexDirection: 'row', gap: 12 },
+  half: { flex: 1, gap: 10 },
+  row: { flexDirection: 'row', gap: 8 },
   flex: { flex: 1 },
-  caption: { color: colors.dim, textAlign: 'center', fontSize: 13 },
-  heading: { color: colors.dim, fontWeight: '800', letterSpacing: 3, fontSize: 13, textAlign: 'center' },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
-  swatch: { width: 44, height: 44, borderRadius: 22, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
-  swatchDot: { width: 10, height: 10, borderRadius: 5, opacity: 0.8 },
-  swatchDotOn: { width: 16, height: 16, borderRadius: 8, opacity: 1 },
-  lock: { fontSize: 15, opacity: 0.7 },
-  toggles: { flexDirection: 'row', justifyContent: 'space-around' },
+  caption: { fontFamily: fonts.body, color: colors.dim, fontSize: 15, lineHeight: 20 },
+  captionStrong: { fontFamily: fonts.bold, color: colors.text },
+  panel: { backgroundColor: colors.plate, borderRadius: 16, padding: 16, gap: 12, marginTop: 4 },
+  settingRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  settingLabel: { fontFamily: fonts.bold, color: colors.text, fontSize: 16 },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  swatch: { width: 40, height: 40, borderRadius: 20, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
+  swatchLocked: { borderColor: 'rgba(154, 147, 196, 0.4)', borderStyle: 'dashed', borderWidth: 2 },
+  swatchSelected: { transform: [{ scale: 1.08 }] },
+  swatchDot: { width: 12, height: 12, borderRadius: 6 },
+  hint: { fontFamily: fonts.body, color: colors.marquee, fontSize: 15 },
+  toggles: { flexDirection: 'row', gap: 24, marginTop: 4 },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  toggleLabel: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  toggleLabel: { fontFamily: fonts.bold, color: colors.text, fontSize: 16 },
 });
