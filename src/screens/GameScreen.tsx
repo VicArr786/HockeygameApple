@@ -15,9 +15,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NeonButton } from '../components/NeonButton';
 import { TableArt } from '../components/TableArt';
-import type { Difficulty } from '../game/ai';
+import { rewardInfo, type Reward } from '../career';
+import type { CpuParams } from '../game/ai';
 import { COUNTDOWN, Match } from '../game/match';
-import { colors, glow, playerColor } from '../theme';
+import { paddleSkin, tableSkin } from '../skins';
+import { colors, glow } from '../theme';
 import type { GameMode } from './MenuScreen';
 
 const MARGIN = 10;
@@ -25,8 +27,14 @@ const PAUSE_BTN = 44;
 
 type Props = {
   mode: GameMode;
-  difficulty: Difficulty;
+  cpu: CpuParams;
+  opponent?: string; // Career rival's name
+  reward?: Reward; // shown when this win unlocks something
+  finalBoss?: boolean;
   target: number;
+  paddle: string; // skin ids
+  table: string;
+  onNext?: () => void; // play the next Career rival
   onExit: () => void;
   onResult: (won: boolean) => void;
 };
@@ -53,14 +61,19 @@ export function GameScreen(props: Props) {
   return <Board key={`${layout.W}x${layout.H}`} layout={layout} {...props} />;
 }
 
-function Board({ mode, difficulty, target, onExit, onResult, layout }: Props & { layout: Layout }) {
+function Board(props: Props & { layout: Layout }) {
+  const { mode, cpu, opponent, reward, finalBoss, target, onNext, onExit, onResult, layout } = props;
   const twoP = mode === '2p';
+  const skin = tableSkin(props.table);
+  // Your paddle wears the chosen skin; the top paddle is always cyan.
+  const p0 = paddleSkin(props.paddle).color;
+  const pc = (p: 0 | 1) => (p === 0 ? p0 : colors.p1);
   const newMatch = () =>
     new Match({
       W: layout.W,
       H: layout.H,
       twoPlayer: twoP,
-      difficulty,
+      cpu,
       target,
       deadZone: { x: 0, y: layout.H / 2 - PAUSE_BTN, w: PAUSE_BTN + 12, h: PAUSE_BTN * 2 },
     });
@@ -136,20 +149,20 @@ function Board({ mode, difficulty, target, onExit, onResult, layout }: Props & {
       onTouchCancel={onTouches}
     >
       <StatusBar hidden />
-      <View style={[styles.table, { left: layout.left, top: layout.top, width: W, height: H }]}>
-        <TableArt W={W} H={H} goalW={goalW} />
+      <View style={[styles.table, { left: layout.left, top: layout.top, width: W, height: H, backgroundColor: skin.table }]}>
+        <TableArt W={W} H={H} goalW={goalW} skin={skin} p0={p0} />
 
         {g.phase === 'goal' && (
           <View
             pointerEvents="none"
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: playerColor(g.lastScorer), opacity: Math.max(0, 0.25 - g.phaseT * 0.3) },
+              { backgroundColor: pc(g.lastScorer), opacity: Math.max(0, 0.25 - g.phaseT * 0.3) },
             ]}
           />
         )}
 
-        <Scoreboard score={g.score} W={W} H={H} twoP={twoP} />
+        <Scoreboard score={g.score} W={W} H={H} twoP={twoP} p0={p0} />
 
         {showPuck &&
           g.trail.map((p, i) => {
@@ -166,7 +179,7 @@ function Board({ mode, difficulty, target, onExit, onResult, layout }: Props & {
 
         {showPuck && <Puck x={sim.puck.x} y={sim.puck.y} r={sim.puck.r} />}
         <Paddle x={sim.paddles[1].x} y={sim.paddles[1].y} r={sim.paddles[1].r} color={colors.p1} />
-        <Paddle x={sim.paddles[0].x} y={sim.paddles[0].y} r={sim.paddles[0].r} color={colors.p0} />
+        <Paddle x={sim.paddles[0].x} y={sim.paddles[0].y} r={sim.paddles[0].r} color={p0} />
 
         <Pressable
           accessibilityRole="button"
@@ -179,7 +192,7 @@ function Board({ mode, difficulty, target, onExit, onResult, layout }: Props & {
           <View style={styles.pauseBar} />
         </Pressable>
 
-        <Banners g={g} W={W} H={H} twoP={twoP} />
+        <Banners g={g} W={W} H={H} twoP={twoP} pc={pc} opponent={opponent} />
       </View>
 
       {g.phase === 'paused' && (
@@ -187,25 +200,30 @@ function Board({ mode, difficulty, target, onExit, onResult, layout }: Props & {
           <Text style={styles.overlayTitle}>PAUSED</Text>
           <NeonButton label="RESUME" color={colors.p1} onPress={() => match.resume()} style={styles.overlayBtn} />
           <NeonButton label="RESTART" color={colors.puck} onPress={restart} style={styles.overlayBtn} />
-          <NeonButton label="MENU" color={colors.p0} onPress={onExit} style={styles.overlayBtn} />
+          <NeonButton label={opponent ? 'CAREER' : 'MENU'} color={colors.p0} onPress={onExit} style={styles.overlayBtn} />
         </Overlay>
       )}
 
       {g.phase === 'over' && g.winner !== null && (
         <Overlay>
           {twoP && (
-            <Text style={[styles.overlayTitle, styles.flipped, { color: playerColor(1) }]}>
+            <Text style={[styles.overlayTitle, styles.flipped, { color: pc(1) }]}>
               {g.winner === 1 ? 'YOU WIN!' : 'YOU LOSE'}
             </Text>
           )}
-          <Text style={[styles.overlayTitle, { color: twoP ? playerColor(0) : playerColor(g.winner) }]}>
-            {g.winner === 0 ? 'YOU WIN!' : twoP ? 'YOU LOSE' : 'CPU WINS'}
+          <Text style={[styles.overlayTitle, { color: twoP ? pc(0) : pc(g.winner) }]}>
+            {g.winner === 0 ? (finalBoss ? 'CHAMPION!' : 'YOU WIN!') : twoP ? 'YOU LOSE' : `${opponent ?? 'CPU'} WINS`}
           </Text>
           <Text style={styles.finalScore}>
             {g.score[0]} – {g.score[1]}
           </Text>
-          <NeonButton label="REMATCH" color={colors.p1} onPress={restart} style={styles.overlayBtn} />
-          <NeonButton label="MENU" color={colors.p0} onPress={onExit} style={styles.overlayBtn} />
+          {g.winner === 0 && reward && <Unlocked reward={reward} />}
+          {g.winner === 0 && onNext ? (
+            <NeonButton label="NEXT RIVAL" color={colors.puck} onPress={onNext} style={styles.overlayBtn} />
+          ) : (
+            <NeonButton label="REMATCH" color={colors.p1} onPress={restart} style={styles.overlayBtn} />
+          )}
+          <NeonButton label={opponent ? 'CAREER' : 'MENU'} color={colors.p0} onPress={onExit} style={styles.overlayBtn} />
         </Overlay>
       )}
     </View>
@@ -250,19 +268,34 @@ function Paddle({ x, y, r, color }: { x: number; y: number; r: number; color: st
   );
 }
 
-function Scoreboard({ score, W, H, twoP }: { score: [number, number]; W: number; H: number; twoP: boolean }) {
+function Unlocked({ reward }: { reward: Reward }) {
+  const { label, color } = rewardInfo(reward);
+  return (
+    <View style={[styles.unlocked, { borderColor: color, boxShadow: glow(color, 12, 0) }]}>
+      <Text style={styles.unlockedKicker}>UNLOCKED</Text>
+      <View style={styles.unlockedRow}>
+        <View style={[styles.unlockedSwatch, { backgroundColor: color, boxShadow: glow(color, 8, 1) }]} />
+        <Text style={styles.unlockedLabel}>{label}</Text>
+      </View>
+    </View>
+  );
+}
+
+function Scoreboard({ score, W, H, twoP, p0 }: { score: [number, number]; W: number; H: number; twoP: boolean; p0: string }) {
   const size = Math.round(W * 0.11);
   return (
     <View pointerEvents="none" style={[styles.scoreboard, { top: H / 2 - size * 1.45, right: W * 0.05, height: size * 2.9 }]}>
       <Text style={[styles.score, { fontSize: size, color: colors.p1, textShadowColor: colors.p1 }, twoP && styles.flipped]}>
         {score[1]}
       </Text>
-      <Text style={[styles.score, { fontSize: size, color: colors.p0, textShadowColor: colors.p0 }]}>{score[0]}</Text>
+      <Text style={[styles.score, { fontSize: size, color: p0, textShadowColor: p0 }]}>{score[0]}</Text>
     </View>
   );
 }
 
-function Banners({ g, W, H, twoP }: { g: Match; W: number; H: number; twoP: boolean }) {
+type BannerProps = { g: Match; W: number; H: number; twoP: boolean; pc: (p: 0 | 1) => string; opponent?: string };
+
+function Banners({ g, W, H, twoP, pc, opponent }: BannerProps) {
   let text: string | null = null;
   let color = colors.text;
   if (g.phase === 'countdown') {
@@ -272,7 +305,7 @@ function Banners({ g, W, H, twoP }: { g: Match; W: number; H: number; twoP: bool
     color = colors.puck;
   } else if (g.phase === 'goal') {
     text = 'GOAL!';
-    color = playerColor(g.lastScorer);
+    color = pc(g.lastScorer);
   }
   if (!text) return null;
   const size = W * (text.length > 1 ? 0.16 : 0.22);
@@ -288,6 +321,9 @@ function Banners({ g, W, H, twoP }: { g: Match; W: number; H: number; twoP: bool
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {twoP && banner(true, H * 0.25 - size * 0.7)}
       {banner(false, twoP ? H * 0.75 - size * 0.7 : H / 2 - size * 1.6)}
+      {opponent && g.phase === 'countdown' && (
+        <Text style={[styles.versus, { top: H * 0.27, width: W, fontSize: W * 0.07 }]}>VS {opponent}</Text>
+      )}
     </View>
   );
 }
@@ -315,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: PAUSE_BTN / 2,
     borderWidth: 2,
     borderColor: colors.line,
-    backgroundColor: colors.table,
+    backgroundColor: colors.bg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -346,4 +382,20 @@ const styles = StyleSheet.create({
   overlayTitle: { color: colors.text, fontSize: 34, fontWeight: '900', fontStyle: 'italic', textAlign: 'center', letterSpacing: 2 },
   finalScore: { color: colors.dim, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 6 },
   overlayBtn: { alignSelf: 'stretch' },
+  versus: {
+    position: 'absolute',
+    left: 0,
+    textAlign: 'center',
+    color: colors.p1,
+    fontWeight: '900',
+    letterSpacing: 4,
+    textShadowColor: colors.p1,
+    textShadowRadius: 12,
+    textShadowOffset: { width: 0, height: 0 },
+  },
+  unlocked: { alignSelf: 'stretch', borderWidth: 1.5, borderRadius: 14, padding: 12, gap: 8, marginBottom: 4 },
+  unlockedKicker: { color: colors.dim, fontSize: 12, fontWeight: '800', letterSpacing: 3, textAlign: 'center' },
+  unlockedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  unlockedSwatch: { width: 18, height: 18, borderRadius: 9 },
+  unlockedLabel: { color: colors.text, fontSize: 17, fontWeight: '800' },
 });

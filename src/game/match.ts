@@ -1,5 +1,5 @@
 import { buzz, playSound } from '../feedback';
-import { CpuPlayer, type Difficulty } from './ai';
+import { CpuPlayer, type CpuParams } from './ai';
 import { createSim, servePuck, step, type Sim, type Vec } from './physics';
 
 export type Phase = 'countdown' | 'play' | 'goal' | 'paused' | 'over';
@@ -12,7 +12,7 @@ type Options = {
   W: number;
   H: number;
   twoPlayer: boolean;
-  difficulty: Difficulty;
+  cpu: CpuParams; // ignored in two-player games
   target: number;
   // Rectangle (table coords) where touches are ignored, e.g. the pause button.
   deadZone: { x: number; y: number; w: number; h: number };
@@ -39,7 +39,7 @@ export class Match {
     this.sim = createSim(opts.W, opts.H);
     this.sim.puckInPlay = false;
     this.twoPlayer = opts.twoPlayer;
-    this.cpu = opts.twoPlayer ? null : new CpuPlayer(opts.difficulty);
+    this.cpu = opts.twoPlayer ? null : new CpuPlayer(opts.cpu);
   }
 
   pause() {

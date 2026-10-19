@@ -10,7 +10,13 @@ export type Settings = {
   target: number;
   // Wins and losses against the CPU, per difficulty.
   record: Record<Difficulty, { w: number; l: number }>;
+  beaten: number; // Career rivals defeated, in ladder order
+  paddle: string; // skin ids, see skins.ts
+  table: string;
+  cpuWins: number; // all wins against the CPU, Career included
 };
+
+export type MatchResult = { won: boolean; difficulty?: Difficulty; rival?: number };
 
 const KEY = 'neon-air-hockey/settings/v1';
 
@@ -20,12 +26,16 @@ const DEFAULTS: Settings = {
   difficulty: 'normal',
   target: 7,
   record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } },
+  beaten: 0,
+  paddle: 'pink',
+  table: 'midnight',
+  cpuWins: 0,
 };
 
 type Ctx = {
   settings: Settings;
   update: (patch: Partial<Settings>) => void;
-  recordResult: (difficulty: Difficulty, won: boolean) => void;
+  recordResult: (result: MatchResult) => void;
 };
 
 const SettingsContext = createContext<Ctx | null>(null);
@@ -54,10 +64,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const update = useCallback((patch: Partial<Settings>) => save((s) => ({ ...s, ...patch })), [save]);
 
   const recordResult = useCallback(
-    (difficulty: Difficulty, won: boolean) =>
+    ({ won, difficulty, rival }: MatchResult) =>
       save((s) => {
-        const r = s.record[difficulty];
-        return { ...s, record: { ...s.record, [difficulty]: won ? { ...r, w: r.w + 1 } : { ...r, l: r.l + 1 } } };
+        const next = { ...s, cpuWins: s.cpuWins + (won ? 1 : 0) };
+        if (difficulty) {
+          const r = s.record[difficulty];
+          next.record = { ...s.record, [difficulty]: won ? { ...r, w: r.w + 1 } : { ...r, l: r.l + 1 } };
+        }
+        // Only beating the next rival on the ladder moves you up.
+        if (won && rival === s.beaten) next.beaten = s.beaten + 1;
+        return next;
       }),
     [save],
   );

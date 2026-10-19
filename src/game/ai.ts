@@ -2,14 +2,14 @@ import type { Sim, Vec } from './physics';
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
-type Params = {
+export type CpuParams = {
   speed: number; // paddle speed in table-widths per second
   reaction: number; // seconds between re-planning
   error: number; // aim noise in table-widths
   aggression: number; // 0..1, how readily it leaves defence to attack
 };
 
-const PARAMS: Record<Difficulty, Params> = {
+export const DIFFICULTY_PARAMS: Record<Difficulty, CpuParams> = {
   easy: { speed: 1.1, reaction: 0.26, error: 0.14, aggression: 0.45 },
   normal: { speed: 1.9, reaction: 0.13, error: 0.07, aggression: 0.75 },
   hard: { speed: 3.0, reaction: 0.05, error: 0.025, aggression: 1 },
@@ -17,13 +17,13 @@ const PARAMS: Record<Difficulty, Params> = {
 
 // CPU opponent controlling the top paddle (player 1).
 export class CpuPlayer {
-  private p: Params;
+  private p: CpuParams;
   private plan: Vec;
   private untilReplan = 0;
   private aimX = 0;
 
-  constructor(difficulty: Difficulty, private rand: () => number = Math.random) {
-    this.p = PARAMS[difficulty];
+  constructor(params: CpuParams, private rand: () => number = Math.random) {
+    this.p = params;
     this.plan = { x: 0, y: 0 };
   }
 

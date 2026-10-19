@@ -22,7 +22,10 @@ npx expo start     # scan the QR code with Expo Go on your iPhone
 | `src/game/physics.ts` | Pure simulation: puck/paddle collisions, sub-stepping, walls, goal posts |
 | `src/game/ai.ts` | CPU opponent (easy / normal / hard) |
 | `src/game/match.ts` | Phase machine (countdown, play, goal, pause, over), scoring, touch routing |
-| `src/screens/` | Menu and game screens |
+| `src/screens/` | Menu, Career and game screens |
+| `src/career.ts` | Career ladder: the 8 rivals, their CPU tuning and unlock rewards |
+| `src/skins.ts` | Unlockable paddle and table colours |
+| `src/review.ts` | App Store rating prompt (after the 3rd and 15th CPU win; never shows in TestFlight) |
 | `src/feedback.ts` | Sound effects (expo-audio) and haptics |
 | `scripts/make_assets.py` | Regenerates every sound, the icon and splash (`python3 scripts/make_assets.py`) |
 | `store/` | App Store listing text, privacy policy, screenshots |
