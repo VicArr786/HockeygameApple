@@ -15,7 +15,7 @@
 | Support URL | `https://<your-project>.vercel.app/support` |
 | Support email | tend-us.support@proton.me |
 | Marketing URL | `https://<your-project>.vercel.app/` (optional) |
-| Copyright | 2026 <your name> |
+| Copyright | 2026 Recluze |
 
 ## Promotional text (170)
 

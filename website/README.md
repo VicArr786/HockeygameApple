@@ -5,12 +5,8 @@ Static site for the App Store's required URLs: a landing page plus
 
 ## 1. Fill in your details
 
-The support email (tend-us.support@proton.me) is filled in. The copyright
-line still has a `[YOUR NAME]` placeholder; replace it from the repo root:
-
-```bash
-sed -i 's/\[YOUR NAME\]/Jane Doe/g' website/*.html
-```
+The support email (tend-us.support@proton.me) and the developer name (Recluze)
+are filled in on every page.
 
 Once the app is live, also replace the `href="#"` on the "Coming soon" button in
 `index.html` with your App Store link and change its text.

@@ -221,7 +221,8 @@ export function stage(index: number): Stage {
       tagline: L.boss.title,
       boss: true,
       mods: L.boss.mods,
-      cpu: cpuFor(x + 0.06, L.boss.style),
+      // The first two bosses rely on their rule twist alone, to keep the opening gentle.
+      cpu: cpuFor(x + (league < 2 ? 0 : 0.06), L.boss.style),
       target: 7,
     });
   }
