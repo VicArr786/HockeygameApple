@@ -23,7 +23,8 @@ npx expo start     # scan the QR code with Expo Go on your iPhone
 | `src/game/ai.ts` | CPU opponent (easy / normal / hard) |
 | `src/game/match.ts` | Phase machine (countdown, play, goal, pause, over), scoring, touch routing |
 | `src/screens/` | Menu, Career and game screens |
-| `src/career.ts` | Career ladder: the 8 rivals, their CPU tuning and unlock rewards |
+| `src/career.ts` | Career: 12 leagues × 8 stages, bosses and their rule mods, the endless Infinity Tower, stars, ranks and unlocks (all generated from the stage number) |
+| `src/endless.ts` | Endless survival: lives, CPU ramp and random rule waves |
 | `src/skins.ts` | Unlockable paddle and table colours |
 | `src/review.ts` | App Store rating prompt (after the 3rd and 15th CPU win; never shows in TestFlight) |
 | `src/feedback.ts` | Sound effects (expo-audio) and haptics |

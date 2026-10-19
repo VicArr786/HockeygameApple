@@ -10,13 +10,15 @@ export type Settings = {
   target: number;
   // Wins and losses against the CPU, per difficulty.
   record: Record<Difficulty, { w: number; l: number }>;
-  beaten: number; // Career rivals defeated, in ladder order
+  beaten: number; // Career stages cleared, in order (see career.ts)
+  stars: number[]; // best stars earned on each Career stage
   paddle: string; // skin ids, see skins.ts
   table: string;
   cpuWins: number; // all wins against the CPU, Career included
+  endlessBest: number; // highest Endless score
 };
 
-export type MatchResult = { won: boolean; difficulty?: Difficulty; rival?: number };
+export type MatchResult = { won: boolean; difficulty?: Difficulty; stage?: number; stars?: number; endless?: number };
 
 const KEY = 'neon-air-hockey/settings/v1';
 
@@ -27,9 +29,11 @@ const DEFAULTS: Settings = {
   target: 7,
   record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } },
   beaten: 0,
+  stars: [],
   paddle: 'pink',
   table: 'midnight',
   cpuWins: 0,
+  endlessBest: 0,
 };
 
 type Ctx = {
@@ -64,15 +68,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const update = useCallback((patch: Partial<Settings>) => save((s) => ({ ...s, ...patch })), [save]);
 
   const recordResult = useCallback(
-    ({ won, difficulty, rival }: MatchResult) =>
+    ({ won, difficulty, stage, stars, endless }: MatchResult) =>
       save((s) => {
         const next = { ...s, cpuWins: s.cpuWins + (won ? 1 : 0) };
+        if (endless !== undefined) next.endlessBest = Math.max(s.endlessBest, endless);
         if (difficulty) {
           const r = s.record[difficulty];
           next.record = { ...s.record, [difficulty]: won ? { ...r, w: r.w + 1 } : { ...r, l: r.l + 1 } };
         }
-        // Only beating the next rival on the ladder moves you up.
-        if (won && rival === s.beaten) next.beaten = s.beaten + 1;
+        if (won && stage !== undefined) {
+          // Only clearing the next stage moves you up; replays can improve stars.
+          if (stage === s.beaten) next.beaten = s.beaten + 1;
+          const best = [...s.stars];
+          best[stage] = Math.max(best[stage] ?? 0, stars ?? 1);
+          next.stars = Array.from(best, (v) => v ?? 0);
+        }
         return next;
       }),
     [save],

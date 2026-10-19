@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { RIVALS } from './src/career';
+import { newUnlocks, stage as getStage, starsFor, totalStars, type CareerResult } from './src/career';
 import { configureFeedback, initFeedback } from './src/feedback';
 import { DIFFICULTY_PARAMS } from './src/game/ai';
 import { maybeAskForReview } from './src/review';
@@ -23,9 +23,8 @@ export default function App() {
   );
 }
 
-// `firstTry` is captured when the match starts, so the reward banner still
-// shows after the win has already moved the ladder on.
-type Game = { mode: GameMode; rival?: number; firstTry?: boolean };
+// `best` is the Endless record when the run started, for the "new best" banner.
+type Game = { mode: GameMode; stage?: number; best?: number };
 type Screen = { name: 'menu' } | { name: 'career' } | { name: 'game'; game: Game };
 
 // Three screens and no back-swipe wanted mid-match, so a plain state switch
@@ -33,45 +32,64 @@ type Screen = { name: 'menu' } | { name: 'career' } | { name: 'game'; game: Game
 function Root() {
   const { settings, recordResult } = useSettings();
   const [screen, setScreen] = useState<Screen>({ name: 'menu' });
+  const [result, setResult] = useState<CareerResult | null>(null);
 
   useEffect(() => {
     configureFeedback({ sound: settings.sound, haptics: settings.haptics });
   }, [settings.sound, settings.haptics]);
 
-  const playRival = (rival: number) =>
-    setScreen({ name: 'game', game: { mode: '1p', rival, firstTry: rival >= settings.beaten } });
+  const playStage = (stage: number) => {
+    setResult(null);
+    setScreen({ name: 'game', game: { mode: '1p', stage } });
+  };
 
   let content;
   if (screen.name === 'game') {
     const { game } = screen;
-    const rival = game.rival !== undefined ? RIVALS[game.rival] : undefined;
-    const nextRival = game.rival !== undefined && game.rival + 1 < RIVALS.length ? game.rival + 1 : undefined;
+    const st = game.stage !== undefined ? getStage(game.stage) : undefined;
     content = (
       <GameScreen
-        key={`${game.mode}:${game.rival ?? '-'}`}
+        key={`${game.mode}:${game.stage ?? '-'}`}
         mode={game.mode}
-        cpu={rival?.cpu ?? DIFFICULTY_PARAMS[settings.difficulty]}
-        opponent={rival?.name}
-        reward={game.firstTry ? rival?.reward : undefined}
-        finalBoss={game.rival === RIVALS.length - 1}
-        target={settings.target}
+        cpu={st?.cpu ?? DIFFICULTY_PARAMS[settings.difficulty]}
+        stage={st}
+        result={result}
+        endlessBest={game.best}
+        target={st?.target ?? settings.target}
         paddle={settings.paddle}
         table={settings.table}
-        onNext={nextRival !== undefined ? () => playRival(nextRival) : undefined}
-        onExit={() => setScreen(game.rival !== undefined ? { name: 'career' } : { name: 'menu' })}
-        onResult={(won) => {
+        onNext={st ? () => playStage(st.index + 1) : undefined}
+        onRestart={() => setResult(null)}
+        onExit={() => setScreen(st ? { name: 'career' } : { name: 'menu' })}
+        onResult={(won, score) => {
           if (game.mode === '2p') return;
-          recordResult({ won, rival: game.rival, difficulty: rival ? undefined : settings.difficulty });
+          if (game.mode === 'endless') {
+            recordResult({ won: false, endless: score[0] });
+            return;
+          }
+          if (!st) {
+            recordResult({ won, difficulty: settings.difficulty });
+          } else {
+            const stars = won ? starsFor(st.target, score[1] - st.startScore[1]) : 0;
+            const before = { beaten: settings.beaten, stars: totalStars(settings.stars) };
+            const best = Math.max(settings.stars[st.index] ?? 0, stars);
+            const after = {
+              beaten: won && st.index === settings.beaten ? settings.beaten + 1 : settings.beaten,
+              stars: before.stars - (settings.stars[st.index] ?? 0) + best,
+            };
+            recordResult({ won, stage: st.index, stars });
+            setResult({ stars, unlocks: won ? newUnlocks(before, after) : [] });
+          }
           if (won) maybeAskForReview(settings.cpuWins + 1);
         }}
       />
     );
   } else if (screen.name === 'career') {
-    content = <CareerScreen onPlay={playRival} onBack={() => setScreen({ name: 'menu' })} />;
+    content = <CareerScreen onPlay={playStage} onBack={() => setScreen({ name: 'menu' })} />;
   } else {
     content = (
       <MenuScreen
-        onPlay={(mode) => setScreen({ name: 'game', game: { mode } })}
+        onPlay={(mode) => setScreen({ name: 'game', game: { mode, best: settings.endlessBest } })}
         onCareer={() => setScreen({ name: 'career' })}
       />
     );

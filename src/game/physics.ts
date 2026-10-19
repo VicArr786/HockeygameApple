@@ -14,10 +14,26 @@ export type Table = {
   W: number;
   H: number;
   puckR: number;
-  paddleR: number;
-  goalW: number;
+  paddleR: number; // standard size; see paddleRs for the actual per-player size
+  goalW: number; // standard width; see goalWs
+  // Per player: index 0 is the bottom player, 1 the top. goalWs[i] is the
+  // width of the goal player i defends.
+  paddleRs: [number, number];
+  goalWs: [number, number];
   maxPuckSpeed: number;
   maxPaddleSpeed: number;
+  drag: number;
+  wallRestitution: number;
+};
+
+// Rule changes used by Career bosses. Scales are relative to a standard table.
+export type SimMods = {
+  paddleScale?: [number, number];
+  goalScale?: [number, number];
+  puckScale?: number;
+  speedScale?: number;
+  dragScale?: number;
+  bounce?: number; // wall restitution
 };
 
 export type Sim = {
@@ -34,26 +50,35 @@ const PADDLE_RESTITUTION = 0.9;
 // Exponential drag per second; air tables are nearly frictionless.
 const DRAG = 0.22;
 
-export function makeTable(W: number, H: number): Table {
+export function makeTable(W: number, H: number, mods: SimMods = {}): Table {
+  const paddleR = W * 0.085;
+  const goalW = W * 0.38;
+  const ps = mods.paddleScale ?? [1, 1];
+  const gs = mods.goalScale ?? [1, 1];
   return {
     W,
     H,
-    puckR: W * 0.055,
-    paddleR: W * 0.085,
-    goalW: W * 0.38,
-    maxPuckSpeed: W * 3.2,
+    puckR: W * 0.055 * (mods.puckScale ?? 1),
+    paddleR,
+    goalW,
+    paddleRs: [paddleR * ps[0], paddleR * ps[1]],
+    // Never wider than the table minus room for the posts.
+    goalWs: [Math.min(W * 0.8, goalW * gs[0]), Math.min(W * 0.8, goalW * gs[1])],
+    maxPuckSpeed: W * 3.2 * (mods.speedScale ?? 1),
     maxPaddleSpeed: W * 7,
+    drag: DRAG * (mods.dragScale ?? 1),
+    wallRestitution: mods.bounce ?? WALL_RESTITUTION,
   };
 }
 
-export function createSim(W: number, H: number): Sim {
-  const table = makeTable(W, H);
+export function createSim(W: number, H: number, mods?: SimMods): Sim {
+  const table = makeTable(W, H, mods);
   const sim: Sim = {
     table,
     puck: { x: W / 2, y: H / 2, vx: 0, vy: 0, r: table.puckR },
     paddles: [
-      { x: W / 2, y: H * 0.85, vx: 0, vy: 0, r: table.paddleR },
-      { x: W / 2, y: H * 0.15, vx: 0, vy: 0, r: table.paddleR },
+      { x: W / 2, y: H * 0.85, vx: 0, vy: 0, r: table.paddleRs[0] },
+      { x: W / 2, y: H * 0.15, vx: 0, vy: 0, r: table.paddleRs[1] },
     ],
     targets: [
       { x: W / 2, y: H * 0.85 },
@@ -75,7 +100,7 @@ export function servePuck(sim: Sim, toPlayer: 0 | 1) {
 }
 
 export function clampPaddle(t: Table, player: 0 | 1, p: Vec): Vec {
-  const r = t.paddleR;
+  const r = t.paddleRs[player];
   // Paddles may reach slightly past their own side of the centre line so a
   // puck resting on the line can always be played.
   const reach = r * 0.25;
@@ -168,7 +193,7 @@ export function step(sim: Sim, dt: number): GameEvent[] {
   }
 
   if (sim.puckInPlay) {
-    const k = Math.exp(-DRAG * dt);
+    const k = Math.exp(-t.drag * dt);
     puck.vx *= k;
     puck.vy *= k;
   }
@@ -206,7 +231,7 @@ function collideWalls(sim: Sim): number {
   let strength = 0;
   const bounce = (v: number) => {
     strength = Math.max(strength, Math.min(1, Math.abs(v) / t.maxPuckSpeed));
-    return -v * WALL_RESTITUTION;
+    return -v * t.wallRestitution;
   };
 
   if (puck.x < r) {
@@ -217,8 +242,10 @@ function collideWalls(sim: Sim): number {
     if (puck.vx > 0) puck.vx = bounce(puck.vx);
   }
 
-  const gl = t.W / 2 - t.goalW / 2;
-  const gr = t.W / 2 + t.goalW / 2;
+  // The goal at the end the puck is nearest: top is player 1's, bottom player 0's.
+  const goalW = puck.y < t.H / 2 ? t.goalWs[1] : t.goalWs[0];
+  const gl = t.W / 2 - goalW / 2;
+  const gr = t.W / 2 + goalW / 2;
   // Once past the goal line the puck is inside the goal box.
   if (puck.y < 0 || puck.y > t.H) puck.x = Math.min(gr, Math.max(gl, puck.x));
   const inMouth = puck.x > gl && puck.x < gr;
@@ -234,22 +261,21 @@ function collideWalls(sim: Sim): number {
   }
 
   // Goal posts behave like round bumpers at the mouth edges.
+  const py = puck.y < t.H / 2 ? 0 : t.H;
   for (const px of [gl, gr]) {
-    for (const py of [0, t.H]) {
-      const dx = puck.x - px;
-      const dy = puck.y - py;
-      const d = Math.hypot(dx, dy);
-      if (d < r && d > 0.0001) {
-        const nx = dx / d;
-        const ny = dy / d;
-        puck.x = px + nx * r;
-        puck.y = py + ny * r;
-        const along = puck.vx * nx + puck.vy * ny;
-        if (along < 0) {
-          strength = Math.max(strength, Math.min(1, -along / t.maxPuckSpeed));
-          puck.vx -= (1 + WALL_RESTITUTION) * along * nx;
-          puck.vy -= (1 + WALL_RESTITUTION) * along * ny;
-        }
+    const dx = puck.x - px;
+    const dy = puck.y - py;
+    const d = Math.hypot(dx, dy);
+    if (d < r && d > 0.0001) {
+      const nx = dx / d;
+      const ny = dy / d;
+      puck.x = px + nx * r;
+      puck.y = py + ny * r;
+      const along = puck.vx * nx + puck.vy * ny;
+      if (along < 0) {
+        strength = Math.max(strength, Math.min(1, -along / t.maxPuckSpeed));
+        puck.vx -= (1 + t.wallRestitution) * along * nx;
+        puck.vy -= (1 + t.wallRestitution) * along * ny;
       }
     }
   }

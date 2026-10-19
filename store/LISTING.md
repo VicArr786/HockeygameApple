@@ -17,7 +17,7 @@
 
 ## Promotional text (170)
 
-Climb the ladder of 8 CPU rivals, unlock neon paddles and tables, or challenge a friend on the same screen. Pure arcade air hockey, glowing neon style.
+12 leagues, 12 rule-bending bosses and an endless Infinity Tower. Earn stars, unlock 28 neon paddles and tables, or challenge a friend on one screen.
 
 ## Description
 
@@ -26,8 +26,17 @@ Bring the arcade home. Neon Air Hockey is fast, physical, two-finger-friendly ai
 DRAG TO PLAY
 Your paddle follows your finger exactly like the real thing — flick it hard to fire the puck, angle it to bank shots off the rails.
 
-CAREER: 8 RIVALS
-Fight your way up a ladder of CPU rivals, each with their own style — the wall-building BRICK, wild-swinging DRIFT, lightning-fast VOLT, all the way to the final boss, OMEGA. Every rival you beat unlocks a new neon paddle or table.
+CAREER: 96 STAGES, 12 BOSSES
+Fight through 12 leagues of CPU rivals, each with their own style: wall-builders, wild swingers, snipers and speed demons. Every league ends in a boss that bends the rules: a giant paddle, a fortress goal, a ghost puck that fades from sight, black ice, a hyper-speed puck, or a head start on the scoreboard. Beat OMEGA, the final boss, if you can.
+
+THE INFINITY TOWER
+Beat the Career and the tower opens: endless floors, each harder than the last, with a guardian boss every 10 floors. How high can you climb?
+
+ENDLESS SURVIVAL
+One game that never ends. Every goal you score makes the CPU sharper, and every 5 points the rules change at random. You have 3 lives; how long can you last?
+
+STARS, RANKS AND UNLOCKS
+Earn up to 3 stars per stage for how few goals you let in, and climb the ranks from Rookie to Immortal. Bosses and star totals unlock 28 neon paddles and tables, including two-tone paddles.
 
 QUICK MATCH
 Three difficulty levels, from a relaxed warm-up to a lightning-fast goalie that punishes every mistake. Your record is tracked for each level.
@@ -39,7 +48,7 @@ ARCADE FEEL
 • Realistic puck physics with rail rebounds and goal-post bounces
 • Haptic feedback on every hit (iPhone)
 • Punchy retro sound effects
-• 8 unlockable paddle and table colours
+• 28 unlockable paddles and tables
 • First to 5, 7 or 11
 • No ads, no tracking, no account, works offline
 
@@ -53,7 +62,7 @@ Choose **"Data Not Collected"**.
 
 ## Review notes
 
-No login required. Tap CAREER to play the ladder of CPU rivals (beating one unlocks the next and a cosmetic colour), QUICK MATCH for a single game against the computer, or 2 PLAYERS for local multiplayer on one device.
+No login required. Tap ENDLESS for a survival run with 3 lives, CAREER to play the stages in order (each league ends in a boss with special rules; bosses and stars unlock cosmetic colours), QUICK MATCH for a single game against the computer, or 2 PLAYERS for local multiplayer on one device.
 
 ## Screenshots
 

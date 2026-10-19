@@ -1,10 +1,10 @@
 import { colors } from './theme';
 
 // Cosmetic unlocks. The defaults are always available; the rest are earned
-// by beating rivals in Career (see career.ts). Paddle colours avoid cyan so
-// your paddle never looks like the opponent's.
+// in Career (see career.ts for which boss or star total unlocks each). Paddle
+// rings avoid cyan so your paddle never looks like the opponent's.
 
-export type PaddleSkin = { id: string; name: string; color: string };
+export type PaddleSkin = { id: string; name: string; color: string; core: string };
 
 export type TableSkin = {
   id: string;
@@ -15,12 +15,25 @@ export type TableSkin = {
   hole: string; // air holes
 };
 
+const paddle = (id: string, name: string, color: string, core = color): PaddleSkin => ({ id, name, color, core });
+
 export const PADDLES: PaddleSkin[] = [
-  { id: 'pink', name: 'Neon Pink', color: colors.p0 },
-  { id: 'lime', name: 'Lime', color: '#9dff3c' },
-  { id: 'orange', name: 'Blaze', color: '#ff8a1f' },
-  { id: 'violet', name: 'Ultraviolet', color: '#b36bff' },
-  { id: 'red', name: 'Red Alert', color: '#ff3b4d' },
+  paddle('pink', 'Neon Pink', colors.p0),
+  paddle('lime', 'Lime', '#9dff3c'),
+  paddle('orange', 'Blaze', '#ff8a1f'),
+  paddle('violet', 'Ultraviolet', '#b36bff'),
+  paddle('red', 'Red Alert', '#ff3b4d'),
+  paddle('gold', 'Gold Rush', '#ffd23f'),
+  paddle('white', 'Whiteout', '#f4f1ff'),
+  paddle('sunset', 'Sunset', '#ff8a1f', '#ff2daa'),
+  paddle('toxic', 'Toxic', '#9dff3c', '#b36bff'),
+  paddle('candy', 'Candy', '#ff2daa', '#f4f1ff'),
+  paddle('inferno', 'Inferno', '#ff3b4d', '#ffd23f'),
+  paddle('royal', 'Royal', '#b36bff', '#ffd23f'),
+  paddle('venom', 'Venom', '#39ff88', '#ff2daa'),
+  paddle('eclipse', 'Eclipse', '#f4f1ff', '#b36bff'),
+  paddle('plasma', 'Plasma', '#ff5cf0', '#9dff3c'),
+  paddle('legend', 'Legend', '#ffd23f', '#f4f1ff'),
 ];
 
 const table = (id: string, name: string, surface: string, edge: string): TableSkin => ({
@@ -37,6 +50,15 @@ export const TABLES: TableSkin[] = [
   table('emerald', 'Emerald', '#04201a', '#2bd67b'),
   table('ice', 'Ice Rink', '#071a2a', '#5ab8ff'),
   table('crimson', 'Crimson', '#220812', '#ff4f6d'),
+  table('synth', 'Synthwave', '#1a0628', '#ff2daa'),
+  table('toxic', 'Toxic Waste', '#0b1a04', '#9dff3c'),
+  table('abyss', 'Abyss', '#020814', '#2f6bff'),
+  table('lava', 'Lava', '#1f0800', '#ff6a00'),
+  table('amethyst', 'Amethyst', '#160a26', '#b36bff'),
+  table('arctic', 'Arctic', '#0c1b22', '#e8fbff'),
+  table('bloodmoon', 'Blood Moon', '#1a0303', '#ff1f3d'),
+  table('jungle', 'Jungle', '#06180c', '#39ff88'),
+  table('void', 'The Void', '#000000', '#f4f1ff'),
   table('gold', 'Champion Gold', '#1d1606', '#ffbf3c'),
 ];
 

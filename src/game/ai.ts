@@ -27,6 +27,10 @@ export class CpuPlayer {
     this.plan = { x: 0, y: 0 };
   }
 
+  setParams(params: CpuParams) {
+    this.p = params;
+  }
+
   update(sim: Sim, dt: number): Vec {
     const t = sim.table;
     const me = sim.paddles[1];
@@ -35,7 +39,7 @@ export class CpuPlayer {
     this.untilReplan -= dt;
     if (this.untilReplan <= 0) {
       this.untilReplan = this.p.reaction;
-      this.aimX = W / 2 + (this.rand() - 0.5) * t.goalW * 0.7;
+      this.aimX = W / 2 + (this.rand() - 0.5) * t.goalWs[0] * 0.7;
       this.plan = this.choose(sim);
       this.plan.x += (this.rand() - 0.5) * this.p.error * W;
     }
@@ -53,8 +57,8 @@ export class CpuPlayer {
     const { table: t, puck } = sim;
     const me = sim.paddles[1];
     const { W, H } = t;
-    const reach = t.paddleR + t.puckR;
-    const defendY = H * 0.11 + t.paddleR * 0.5;
+    const reach = me.r + t.puckR;
+    const defendY = H * 0.11 + me.r * 0.5;
     const speed = Math.hypot(puck.vx, puck.vy);
 
     if (!sim.puckInPlay) return { x: W / 2, y: defendY };
@@ -74,7 +78,7 @@ export class CpuPlayer {
       // In front of the puck: swing around it without knocking it home.
       const side = me.x < puck.x ? -1 : 1;
       const sx = puck.x + side * reach * 1.15;
-      const x = sx < t.paddleR || sx > W - t.paddleR ? puck.x - side * reach * 1.15 : sx;
+      const x = sx < me.r || sx > W - me.r ? puck.x - side * reach * 1.15 : sx;
       return { x, y: puck.y - reach * 1.1 };
     }
 
